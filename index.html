@@ -1,0 +1,3528 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Red Cross Gym — Total Business CRM, Attendance, ID Card & Invoice Suite</title>
+  <meta name="theme-color" content="#d9202e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <!-- Tailwind CSS CDN for responsive adaptive utilities -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Inter Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- jsPDF & PDF.js for Invoice / ID Card Generation and Bill Parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #f4f5f8;
+      --card: #ffffff;
+      --card-alt: #f9fafb;
+      --tx: #141519;
+      --mut: #646876;
+      --red: #d9202e;
+      --red-dark: #a5141f;
+      --bd: #e2e4ec;
+      --ok: #12a150;
+      --warn: #d98a00;
+      --blue: #2563eb;
+      --purple: #7c3aed;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    html[data-theme="dark"] {
+      --bg: #0e1014;
+      --card: #171920;
+      --card-alt: #1f222b;
+      --tx: #f3f4f6;
+      --mut: #9499a6;
+      --bd: #282c37;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--tx);
+      font: 14px/1.45 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .w { max-width: 1280px; margin: 0 auto; padding: 14px; }
+
+    header.app-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: var(--card);
+      border-bottom: 3px solid var(--red);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+
+    button, .btn {
+      background: var(--red);
+      color: #fff;
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 15px;
+      font-weight: 600;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    button:hover, .btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    button:active, .btn:active { transform: translateY(0); }
+    button.g, .btn.g {
+      background: var(--card-alt);
+      color: var(--tx);
+      border: 1px solid var(--bd);
+    }
+    button.g:hover { border-color: var(--red); }
+    button.sm { padding: 5px 10px; font-size: 12px; border-radius: 8px; }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--bd);
+      border-radius: 10px;
+      background: var(--card-alt);
+      color: var(--tx);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(217, 32, 46, 0.15);
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--mut);
+      display: block;
+      margin: 10px 0 4px;
+    }
+
+    .box {
+      background: var(--card);
+      border: 1px solid var(--bd);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--bd);
+      border-radius: 14px;
+      padding: 12px;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .stat.on { outline: 2px solid var(--red); background: rgba(217,32,46,0.06); }
+    .stat b { font-size: 22px; display: block; font-weight: 800; }
+    .stat span { font-size: 11px; color: var(--mut); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .id {
+      background: var(--card);
+      border: 1px solid var(--bd);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .id:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+    }
+    .id .top {
+      background: linear-gradient(135deg, #9e0e1a, #e3283a);
+      color: #fff;
+      padding: 9px 14px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .id .bd { display: flex; gap: 12px; padding: 14px; align-items: center; }
+    .ph {
+      width: 74px;
+      height: 92px;
+      border-radius: 10px;
+      background: var(--bd);
+      object-fit: cover;
+      flex: none;
+      border: 2px solid var(--bd);
+    }
+    .id h3 { margin: 0 0 3px; font-size: 16px; font-weight: 800; }
+    .id p { margin: 0; color: var(--mut); font-size: 12px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .bar {
+      height: 6px;
+      background: var(--bd);
+      margin: 0 14px 12px;
+      border-radius: 9px;
+      overflow: hidden;
+    }
+    .bar i { display: block; height: 100%; border-radius: 9px; }
+    .days {
+      padding: 0 14px 8px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .days b { font-size: 18px; font-weight: 800; }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(4px);
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      z-index: 60;
+      overflow-y: auto;
+    }
+    .modal .box {
+      width: 100%;
+      max-width: 560px;
+      max-height: 92vh;
+      overflow-y: auto;
+      animation: popIn 0.18s ease-out;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .msg { font-size: 12.5px; color: var(--mut); margin-top: 6px; }
+    .err { color: #f87171; font-weight: 600; }
+
+    /* Table styling */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 10px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--mut);
+      background: var(--card-alt);
+      border-bottom: 2px solid var(--bd);
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 10px 10px;
+      border-bottom: 1px solid var(--bd);
+      vertical-align: middle;
+    }
+    .data-table tr:hover td {
+      background: rgba(217, 32, 46, 0.03);
+    }
+
+    /* Special Column Highlights */
+    .col-idcard { background: rgba(217, 32, 46, 0.04); border-left: 2px solid rgba(217, 32, 46, 0.25); }
+    .col-att { background: rgba(18, 161, 80, 0.04); border-left: 2px solid rgba(18, 161, 80, 0.25); }
+    .col-staff { background: rgba(37, 99, 235, 0.04); border-left: 2px solid rgba(37, 99, 235, 0.25); }
+    .col-owner { background: rgba(124, 58, 237, 0.05); border-left: 2px solid rgba(124, 58, 237, 0.3); }
+
+    /* KPI Cards */
+    .kgrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 12px;
+      margin: 10px 0;
+    }
+    .kc {
+      border-radius: 16px;
+      padding: 15px;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.16);
+      position: relative;
+      overflow: hidden;
+    }
+    .kc small { opacity: 0.9; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+    .kc b { font-size: 23px; font-weight: 900; letter-spacing: -0.02em; }
+    .kc em { font-size: 11.5px; opacity: 0.9; font-style: normal; }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card);
+      border: 1px solid var(--bd);
+      border-radius: 99px;
+      padding: 6px 13px;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 10px 16px;
+      background: var(--card);
+      border-bottom: 1px solid var(--bd);
+      position: sticky;
+      top: 57px;
+      z-index: 25;
+    }
+    .nav-tabs button {
+      white-space: nowrap;
+      padding: 8px 15px;
+      border-radius: 99px;
+      font-size: 13px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 14px;
+    }
+
+    .pcg {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 12px;
+    }
+    .pcd {
+      background: var(--card);
+      border: 1px solid var(--bd);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+      transition: border-color 0.15s;
+    }
+    .pcd:hover { border-color: var(--red); }
+
+    /* Toast container */
+    #toast-wrap {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 360px;
+    }
+    .toast-item {
+      background: var(--card);
+      color: var(--tx);
+      border-left: 4px solid var(--red);
+      border-top: 1px solid var(--bd);
+      border-right: 1px solid var(--bd);
+      border-bottom: 1px solid var(--bd);
+      padding: 12px 16px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: popIn 0.2s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="toast-wrap"></div>
+
+  <script>
+    /* ============================================================================
+       1. CONFIGURATION, UTILITIES & NON-BLOCKING UI DIALOGS (NO ALERT/CONFIRM)
+       ============================================================================ */
+    window.RCG_API = "https://script.google.com/macros/s/AKfycbykxXy_Pl-aVSvDwsvz5LypKS0VUYFr5bfwr6Ef8OCDab5y9eH7VRCpqiAHvvheiT4q/exec";
+
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const app = $("#app");
+
+    const ls = {
+      g: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+      s: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} }
+    };
+
+    const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const pd = s => {
+      const m = /(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s || "");
+      return m ? new Date(+m[3], m[2] - 1, +m[1]) : null;
+    };
+    const fmt = d => d ? d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "–";
+    const toGB = d => {
+      const pad = n => String(n).padStart(2, "0");
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+    };
+    const iso = d => {
+      const pad = n => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    };
+    const todayS = () => iso(new Date());
+    const inr = n => "₹" + Math.round(+n || 0).toLocaleString("en-IN");
+    const R2 = n => "Rs. " + (+n || 0).toFixed(2);
+    const sum = (arr, key = "amount") => arr.reduce((a, b) => a + (+b[key] || 0), 0);
+    const pad4 = n => String(n).padStart(4, "0");
+    const addD = (t, n) => { const x = new Date(t + "T00:00:00"); x.setDate(x.getDate() + n); return iso(x); };
+    const difD = (x, y) => Math.round((new Date(y + "T00:00:00") - new Date(x + "T00:00:00")) / 864e5);
+    const dm = t => t ? t.split("-").reverse().join("/") : "";
+    const shortNum = n => {
+      const abs = Math.abs(n);
+      const sign = n < 0 ? "-" : "";
+      if (abs >= 1e5) return sign + "₹" + (abs / 1e5).toFixed(2) + "L";
+      if (abs >= 1e3) return sign + "₹" + (abs / 1e3).toFixed(abs >= 1e4 ? 1 : 1) + "k";
+      return sign + "₹" + Math.round(abs);
+    };
+
+    // Custom Toast Notification (replaces alert())
+    function toast(message, type = "ok") {
+      const wrap = $("#toast-wrap");
+      if (!wrap) return;
+      const el = document.createElement("div");
+      const colors = { ok: "#12a150", err: "#d9202e", warn: "#d98a00", info: "#2563eb" };
+      const icons = { ok: "fa-circle-check", err: "fa-circle-exclamation", warn: "fa-triangle-exclamation", info: "fa-circle-info" };
+      el.className = "toast-item";
+      el.style.borderLeftColor = colors[type] || colors.ok;
+      el.innerHTML = `<i class="fa-solid ${icons[type] || icons.ok}" style="color:${colors[type] || colors.ok};font-size:16px"></i><span>${esc(message)}</span>`;
+      wrap.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = "0";
+        el.style.transition = "opacity 0.25s";
+        setTimeout(() => el.remove(), 260);
+      }, 3400);
+    }
+
+    // Custom Modal Helper
+    function modal(html, maxWidth = "560px") {
+      const d = document.createElement("div");
+      d.className = "modal";
+      d.innerHTML = `<div class="box" style="max-width:${maxWidth}">${html}</div>`;
+      d.onclick = e => { if (e.target === d) d.remove(); };
+      document.body.appendChild(d);
+      return d;
+    }
+
+    // Custom Confirm Dialog (replaces confirm())
+    function askConfirm(title, message, onYes, confirmLabel = "Confirm") {
+      const d = modal(`
+        <h3 style="margin:0 0 6px;font-size:18px;font-weight:800">${esc(title)}</h3>
+        <p class="msg" style="font-size:14px;margin-bottom:16px">${esc(message)}</p>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="g" id="cf-no">Cancel</button>
+          <button id="cf-yes">${esc(confirmLabel)}</button>
+        </div>
+      `, "400px");
+      d.querySelector("#cf-no").onclick = () => d.remove();
+      d.querySelector("#cf-yes").onclick = () => { d.remove(); onYes(); };
+    }
+
+    // Official Red Cross Gym Logo (Embedded RGBA PNG from uploaded brand image)
+    const RCG_LOGO_SRC = "data:image/png;base64,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";
+    const RCG_LOGO_AR = 406 / 120; // Exact aspect ratio (3.3833)
+
+    function brandLogoHTML(size = 38) {
+      const h = size > 42 ? 54 : 38;
+      return `
+        <div style="display:inline-flex;align-items:center;gap:10px;user-select:none">
+          <img id="rcg-brand-logo" src="${RCG_LOGO_SRC}" alt="Red Cross Gym" style="height:${h}px;width:auto;background:#ffffff;border-radius:8px;padding:3px 8px;box-shadow:0 2px 10px rgba(0,0,0,0.22);display:block">
+        </div>
+      `;
+    }
+
+    // Generate placeholder avatar URL (no base64)
+    function avatarUrl(name, bgHex = "d9202e") {
+      const initials = String(name || "Member").trim().split(/\s+/).map(x => x[0]).join("").slice(0, 2).toUpperCase();
+      return `https://placehold.co/160x200/${bgHex}/ffffff?text=${encodeURIComponent(initials)}`;
+    }
+
+    /* ============================================================================
+       2. BUILT-IN PACKAGES, TERMS & CONDITIONS & SAMPLE DEMO DATA
+       ============================================================================ */
+    const PK = [
+      ["A. 15 Months Gym Membership", "Base", 450, 8000],
+      ["B. 12 Months Gym Membership", "Base", 365, 7000],
+      ["C. 09 Months Gym Membership", "Base", 270, 6000],
+      ["D. 06 Months Gym Membership", "Base", 180, 5000],
+      ["E. 03 Months Gym Membership", "Base", 90, 4000],
+      ["F. 02 Months Gym Membership", "Base", 60, 3000],
+      ["G. 01 Month Gym Membership", "Base", 30, 2000],
+      ["H. 07 Days Gym Membership", "Base", 7, 1000],
+      ["I. 01 Day General Gym Membership (Trial)", "Base", 1, 100],
+      ["J. 03 Months Personal Training", "Addon", 90, 25000],
+      ["K. 01 Month Personal Training", "Addon", 30, 10000],
+      ["L. 01 Day Personal Training (Trial)", "Addon", 1, 500]
+    ];
+    const PKO = PK.map(([name, k, days, price], i) => ({
+      id: "d" + i,
+      name,
+      type: k === "Addon" ? "PT" : "Membership",
+      price,
+      days
+    }));
+
+    const MODES = ["UPI", "Cash", "Card"];
+    const EXP_CATS = ["Rent", "Salary", "Electricity", "Equipment", "Maintenance", "Marketing", "Supplements", "Cleaning", "Other"];
+    const OWNER_STATUSES = ["Verified ✔", "Settled to Owner", "Pending Review", "Flagged"];
+    const COL = ["#d9202e", "#2563eb", "#12a150", "#d98a00", "#8b5cf6", "#0891b2", "#ec4899", "#14b8a6"];
+
+    const TERMS = [
+      "0. Payment Terms: Please clear any outstanding balance within 3 working days of the bill date. Failure to settle the pending amount within this period may result in the forfeiture of your token amount and the cancellation of your gym membership.",
+      "1. Membership is strictly non-transferable and non-refundable.",
+      "2. This PDF or a physical receipt of the bill will be the only proof and act as a license for a gym membership within valid dates mentioned in this receipt.",
+      "3. Mandatory Account Verification: Always verify that the banking name is RED CROSS GYM before making any UPI payment. Do not pay cash without collecting an official RED CROSS GYM RECEIPT. This applies to all Gym Memberships and Personal Training.",
+      "4. No Personal Payments: Never pay into an employee's or member's personal account. Management takes no responsibility for payments made without a valid receipt.",
+      "4. Legal Consequences: Any such payments are considered UNAUTHORISED and a THEFT. Strict legal action will be taken against both the sender and the receiver.",
+      "5. Proper gym attire is mandatory, including workout clothing and gym shoes.",
+      "6. Equipment must be used responsibly; members are liable for damages caused by negligence.",
+      "7. Personal training by outsiders is prohibited; only certified Red Cross Gym trainers may provide training.",
+      "8. Members must adhere to gym timings; late entries may not be permitted.",
+      "9. Lockers are temporarily not available and the gym is not responsible for lost or stolen belongings.",
+      "10. Members must disclose any medical conditions. The gym is not liable for injuries, accidents, or health issues arising during workouts.",
+      "11. Hygiene must be maintained at all times. Towels are compulsory, and equipment must be wiped after use.",
+      "12. Misconduct, including rude, aggressive, or inappropriate behavior, will result in immediate termination of membership.",
+      "13. The management reserves the right to amend rules and policies without prior notice.",
+      "@Welcome Guide:",
+      "Welcome! We're glad to have you on board!",
+      "1. This guide has everything you need to stay updated including Instagram, WhatsApp group links, and main communication channels. Please Download the PDF now from the link below and read it very carefully.",
+      "Download Link: https://tr.ee/wzza_le_xM (Download Now!)",
+      "2. Wear clean socks and dry, fresh clothes for each session.",
+      "3. Use deodorant or fragrance. Body odour will not be tolerated.",
+      "4. Bring separate, clean gym-only shoes. No outside shoes allowed.",
+      "5. Carry a towel or napkin. Wipe sweat from yourself and equipment.",
+      "6. Chewing gum is strictly banned in urinals/sanitary areas. Dispose properly.",
+      "7. Any hygiene complaint from staff or members will result in immediate membership termination. No notice. No discussion. No refund.",
+      "8. If someone is unhygienic or disruptive: Take a photo and share it in the group Or report to a staff member.",
+      "9. We take hygiene seriously. Report violations without hesitation. Action will be immediate and final.",
+      "10. Children Policy: Kids are strictly not allowed inside the gym premises. If you bring a child with you, neither you nor the child will be permitted entry.",
+      "11. Guest & Visitors Policy: Relatives and friends are not allowed without an active membership. Non-members must purchase a Guest Pass for Rs. 99 per day, which grants access for up to 90 minutes.",
+      "- RED CROSS GYM MANAGEMENT"
+    ];
+
+    /* ============================================================================
+       3. APPLICATION STATE & LIVE DATA PERSISTENCE (NO DUMMY DATA)
+       ============================================================================ */
+    let role = null; // null (login screen) | 'owner' | 'staff' | 'member'
+    let loginMode = "staff"; // 'staff' | 'member'
+    let activeStaffName = "Staff";
+    let mainTab = "members"; // Start on Members & ID Cards or Dashboard
+    let memberViewMode = "both"; // grid | table | both
+    let breakdownMode = "day"; // day | month | year
+    let flt = "all";
+    let q = "";
+    let EX = "7";
+    let R = { k: "all", from: "", to: "" }; // Default period filter to "all" so all historical data is visible immediately!
+    let isSyncing = false;
+
+    const PRIMARY_API = "https://script.google.com/macros/s/AKfycbykxXy_Pl-aVSvDwsvz5LypKS0VUYFr5bfwr6Ef8OCDab5y9eH7VRCpqiAHvvheiT4q/exec";
+    window.RCG_API = PRIMARY_API;
+    let API = PRIMARY_API;
+    ls.s("rcg_api", API);
+
+    let creds = null;
+    let mphone = null;
+    let mmem = [];
+    let members = [];
+    let attm = {};
+    let C = { sales: [], expenses: [], packages: [], staff: [], pt: [], leads: [] };
+
+    function purgeLegacyDemoCache() {
+      const DUMMY_MEM_IDS = new Set(["m10201","m10202","m10203","m10204","m10205","m10206","m10207","m10208"]);
+      const DUMMY_SALE_IDS = new Set(["s1001","s1002","s1003","s1004","s1005","s1006","s1007","s1008","s1009","s1010"]);
+      const DUMMY_EXP_IDS = new Set(["ex1","ex2","ex3","ex4","ex5","ex6","ex7","ex8"]);
+      const DUMMY_STF_IDS = new Set(["st1","st2","st3","st4"]);
+      const DUMMY_PKG_IDS = new Set(["cp1","cp2"]);
+      try {
+        const m = JSON.parse(ls.g("rcg_cache") || "[]");
+        if (Array.isArray(m) && m.some(x => DUMMY_MEM_IDS.has(x.id))) {
+          ls.s("rcg_cache", JSON.stringify(m.filter(x => !DUMMY_MEM_IDS.has(x.id))));
+        }
+        const a = JSON.parse(ls.g("rcg_att_cache") || "{}");
+        if (a && typeof a === "object") {
+          DUMMY_MEM_IDS.forEach(id => delete a[id]);
+          ls.s("rcg_att_cache", JSON.stringify(a));
+        }
+        const c = JSON.parse(ls.g("rcg_crm_cache") || "null");
+        if (c && typeof c === "object") {
+          c.sales = (c.sales || []).filter(x => !DUMMY_SALE_IDS.has(x.id));
+          c.expenses = (c.expenses || []).filter(x => !DUMMY_EXP_IDS.has(x.id));
+          c.staff = (c.staff || []).filter(x => !DUMMY_STF_IDS.has(x.id));
+          c.packages = (c.packages || []).filter(x => !DUMMY_PKG_IDS.has(x.id));
+          ls.s("rcg_crm_cache", JSON.stringify(c));
+        }
+      } catch (e) {}
+    }
+
+    // Automatically derive sales records from existing member bills so Dashboard, Charts & Sales tables are never empty when members exist
+    function autoSyncSalesFromMembers() {
+      if (!Array.isArray(members) || !members.length) return;
+      const existingRefs = new Set((C.sales || []).map(s => s.ref || (s.memberId + "-" + s.bill)));
+      const existingBills = new Set((C.sales || []).map(s => String(s.bill || "").trim()).filter(Boolean));
+      const derived = [];
+
+      members.forEach((m, idx) => {
+        if (!m) return;
+        const paidAmt = +String(m.paid || m.total || 0).replace(/[^0-9.-]/g, "") || 0;
+        const dueAmt = +String(m.due || 0).replace(/[^0-9.-]/g, "") || 0;
+        const totAmt = +String(m.total || paidAmt).replace(/[^0-9.-]/g, "") || paidAmt;
+        const discAmt = +String(m.disc || 0).replace(/[^0-9.-]/g, "") || 0;
+        if (paidAmt <= 0 && totAmt <= 0) return;
+
+        const refKey = "b" + (m.id || m.bio) + "-" + (m.bill || "");
+        const billStr = String(m.bill || "").trim();
+        if (existingRefs.has(refKey) || (billStr && existingBills.has(billStr))) return;
+
+        const parsedDate = pd(m.billDate) || pd(m.start) || (m.added ? new Date(+m.added) : new Date());
+        const dateISO = parsedDate && !isNaN(parsedDate) ? iso(parsedDate) : todayS();
+
+        derived.push({
+          id: "auto-" + (m.id || idx) + "-" + (billStr || idx),
+          date: dateISO,
+          customer: m.name || "Member",
+          phone: m.phone || "",
+          memberId: m.id || "",
+          bio: String(m.bio || ""),
+          item: m.plan || "Gym Membership",
+          type: /personal training|pt/i.test(m.plan || "") ? "PT" : "Membership",
+          price: +(m.price || totAmt) || totAmt,
+          discount: discAmt,
+          reg: +(m.reg || 0) || 0,
+          total: totAmt,
+          amount: paidAmt,
+          due: dueAmt,
+          mode: m.mode === "Online" ? "UPI" : (m.mode || "UPI"),
+          staff: m.staff || "Owner Direct",
+          ownerStatus: m.ownerStatus || "Verified ✔",
+          ownerNote: m.ownerNote || "",
+          ref: refKey,
+          bill: billStr || String(idx + 1),
+          inv: billStr ? "RCG-" + pad4(billStr) : "RCG-" + pad4(idx + 1),
+          start: m.start || "",
+          end: m.end || "",
+          rtype: m.renewed ? "Renewal" : "Enrollment"
+        });
+      });
+
+      if (derived.length) {
+        C.sales = (C.sales || []).concat(derived);
+      }
+    }
+
+    function saveLocalState() {
+      ls.s("rcg_cache", JSON.stringify(members));
+      ls.s("rcg_att_cache", JSON.stringify(attm));
+      ls.s("rcg_crm_cache", JSON.stringify(C));
+    }
+
+    function loadLocalState() {
+      purgeLegacyDemoCache();
+      try {
+        members = JSON.parse(ls.g("rcg_cache") || "[]");
+        if (!Array.isArray(members)) members = Object.values(members || {});
+      } catch (e) { members = []; }
+      try {
+        attm = JSON.parse(ls.g("rcg_att_cache") || "{}") || {};
+      } catch (e) { attm = {}; }
+      try {
+        const c = JSON.parse(ls.g("rcg_crm_cache") || "null");
+        if (c && typeof c === "object") {
+          C = { sales: [], expenses: [], packages: [], staff: [], pt: [], leads: [], ...c };
+        }
+      } catch (e) {}
+      autoSyncSalesFromMembers();
+    }
+
+    /* ============================================================================
+       4. DIRECT GOOGLE APPS SCRIPT CLOUD SYNC ENGINE (EXACT ORIGINAL PROTOCOL)
+       ============================================================================ */
+    async function api(body) {
+      const payload = creds ? { ...creds, ...body } : body;
+      const r = await fetch(API, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      return r.json();
+    }
+
+    function unpackCrmFromServer(rawCrm) {
+      const crm = { sales: [], expenses: [], packages: [], staff: [], pt: [], leads: [], ...(rawCrm || {}) };
+      const ptStaff = (crm.pt || []).filter(x => x && x._isStaff);
+      const explicitStaff = crm.staff || [];
+      const staffMap = {};
+      [...(C.staff || []), ...explicitStaff, ...ptStaff].forEach(s => { if (s && s.id) staffMap[s.id] = s; });
+      crm.staff = Object.values(staffMap);
+      crm.pt = (crm.pt || []).filter(x => !x || !x._isStaff);
+      return crm;
+    }
+
+    async function syncFromCloud(showToast = false) {
+      if (role === "member" && mphone) {
+        try {
+          const r = await fetch(API, {
+            method: "POST",
+            body: JSON.stringify({ action: "member", phone: mphone })
+          }).then(x => x.json());
+          if (r && Array.isArray(r.members)) {
+            mmem = r.members;
+            ls.s("rcg_mcache", JSON.stringify(mmem));
+            if (showToast) toast("Membership card refreshed ✔", "ok");
+            render();
+            return true;
+          }
+        } catch (e) {
+          if (showToast) toast("Cannot reach server. Check your internet.", "err");
+        }
+        return false;
+      }
+
+      if (!creds || !creds.user) return false;
+      try {
+        isSyncing = true;
+        const r = await api({ action: "list" });
+        if (r && r.error) {
+          isSyncing = false;
+          if (r.error === "auth") {
+            // Cached credentials do not match this script! Force re-login so user can enter exact script credentials
+            toast("Session expired or credentials changed on script. Please sign in.", "warn");
+            ls.s("rcg_role", "");
+            ls.s("rcg_cred", "");
+            creds = null;
+            role = null;
+            render();
+            return false;
+          }
+          if (showToast) toast("Server error: " + r.error, "err");
+          return false;
+        }
+
+        if (r && r.members !== undefined) {
+          role = r.role || role || "owner";
+          ls.s("rcg_role", role);
+          members = Object.values(r.members || {});
+          attm = r.att || attm || {};
+
+          if (r.crm) {
+            C = unpackCrmFromServer(r.crm);
+          } else if (role === "owner") {
+            try {
+              const cr = await api({ action: "crmlist" });
+              if (cr && !cr.error && cr.crm) {
+                C = unpackCrmFromServer(cr.crm);
+              }
+            } catch (e2) {}
+          }
+
+          // Automatically populate C.sales from member bills so charts & sales data show all member revenue immediately
+          autoSyncSalesFromMembers();
+
+          if (C.staff && C.staff.length && activeStaffName === "Staff") {
+            activeStaffName = C.staff[0].name;
+          }
+          saveLocalState();
+          isSyncing = false;
+          if (showToast) toast(`Synced ${members.length} members & ${C.sales.length} bills from Google Drive ✔`, "ok");
+          render();
+          return true;
+        }
+      } catch (e) {
+        isSyncing = false;
+        if (showToast) toast("Cannot reach Google Script server. Check internet.", "err");
+      }
+      isSyncing = false;
+      return false;
+    }
+
+    const store = {
+      set: async m => {
+        const idx = members.findIndex(x => x.id === m.id);
+        if (idx >= 0) members[idx] = m;
+        else members.unshift(m);
+        autoSyncSalesFromMembers();
+        saveLocalState();
+        render();
+        if (creds && API) {
+          const r = await api({ action: "set", member: m });
+          if (r && r.error) throw new Error(r.error);
+          await syncFromCloud(false);
+        }
+      },
+      del: async id => {
+        members = members.filter(x => x.id !== id);
+        delete attm[id];
+        saveLocalState();
+        render();
+        if (creds && API) {
+          const r = await api({ action: "del", id });
+          if (r && r.error) throw new Error(r.error);
+          await syncFromCloud(false);
+        }
+      }
+    };
+
+    async function cputs(col, items) {
+      items.forEach(it => {
+        it.id = it.id || Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        if (col === "staff") it._isStaff = true;
+      });
+      const ids = new Set(items.map(x => x.id));
+      C[col] = (C[col] || []).filter(x => !ids.has(x.id)).concat(items);
+      saveLocalState();
+      if (creds && API && role === "owner") {
+        try {
+          const remoteCol = col === "staff" ? "pt" : col;
+          await api({ action: "crmput", col: remoteCol, items });
+        } catch (e) {}
+      }
+    }
+
+    async function rm(col, id) {
+      askConfirm("Delete Entry", "Are you sure you want to permanently delete this entry?", async () => {
+        C[col] = (C[col] || []).filter(x => x.id !== id);
+        saveLocalState();
+        render();
+        if (creds && API && role === "owner") {
+          try {
+            const remoteCol = col === "staff" ? "pt" : col;
+            await api({ action: "crmdel", col: remoteCol, id });
+          } catch (e) {}
+        }
+        toast("Entry deleted ✔", "info");
+      }, "Delete");
+    }
+
+    const allPk = () => PKO.concat(C.packages || []);
+    const allStaffNames = () => ["Owner Direct", "Staff", ...(C.staff || []).map(s => s.name)].filter((v, i, a) => a.indexOf(v) === i);
+    const newBio = () => {
+      const used = new Set([...members.map(m => String(m.bio)), ...C.sales.map(x => String(x.bio || ""))]);
+      let b;
+      do { b = String(10000 + Math.floor(Math.random() * 90000)); } while (used.has(b));
+      return b;
+    };
+    const billNo = () => Math.max(0, ...members.map(x => +x.bill || 0), ...C.sales.map(x => +String(x.inv).replace(/\D/g, "") || 0)) + 1;
+    const nextInv = k => "RCG-" + pad4(billNo() + (k || 0));
+
+    function info(m) {
+      const s = pd(m.start), e = pd(m.end), t = new Date();
+      t.setHours(0, 0, 0, 0);
+      const left = e ? Math.round((e - t) / 864e5) + 1 : 0;
+      const tot = s && e ? Math.max(1, Math.round((e - s) / 864e5) + 1) : 1;
+      const notStarted = s && s > t;
+      let st = left <= 0 ? ["Expired", "#c0262d"] : left <= 7 ? ["Expiring soon", "#d98a00"] : ["Active", "#12a150"];
+      if (notStarted) st = ["Upcoming", "#2563eb"];
+      return { left: Math.max(0, left), pct: Math.max(0, Math.min(100, (left / tot) * 100)), st };
+    }
+
+    /* ============================================================================
+       5. ATTENDANCE HELPERS & CALCULATIONS
+       ============================================================================ */
+    function adt(x) {
+      const [a, b] = String(x).split(" ");
+      const [y, mo, d] = a.split("-").map(Number);
+      const [h, mi] = (b || "08:00").split(":").map(Number);
+      return new Date(y, mo - 1, d, h, mi);
+    }
+
+    function fmtA(x) {
+      const d = adt(x);
+      return [
+        d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+        d.toLocaleDateString("en-GB", { weekday: "short" }),
+        d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })
+      ];
+    }
+
+    function astats(list) {
+      const pad = n => String(n).padStart(2, "0");
+      const key = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+      const ds = (list || []).map(x => x.slice(0, 10));
+      const set = new Set(ds);
+      const now = new Date();
+      const ym = now.getFullYear() + "-" + pad(now.getMonth() + 1);
+      let c = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const today = set.has(key(c));
+      if (!today) c.setDate(c.getDate() - 1);
+      let streak = 0;
+      while (set.has(key(c))) {
+        streak++;
+        c.setDate(c.getDate() - 1);
+      }
+      return {
+        month: ds.filter(x => x.startsWith(ym)).length,
+        streak,
+        total: set.size,
+        today,
+        last: list && list.length ? list.slice().sort().reverse()[0] : null
+      };
+    }
+
+    function markMemberAttendance(memberId, byWho = "Self") {
+      const m = members.find(x => x.id === memberId);
+      if (!m) return;
+      const st = info(m).st[0];
+      if (st === "Expired" && role === "member") {
+        toast("Membership expired! Please renew at the front desk.", "err");
+        return;
+      }
+      const now = new Date();
+      const pad = n => String(n).padStart(2, "0");
+      const stamp = `${iso(now)} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      const list = (attm[memberId] || []).slice();
+      const alreadyToday = list.some(x => x.startsWith(iso(now)));
+      if (alreadyToday) {
+        toast(`${m.name}'s attendance is already marked for today!`, "info");
+        return;
+      }
+      list.push(stamp);
+      attm[memberId] = list;
+      if (mmem.length) {
+        const mm = mmem.find(x => x.id === memberId);
+        if (mm) mm.att = list;
+      }
+      saveLocalState();
+      if (API) {
+        api({ action: "attend", id: memberId, phone: m.phone }).catch(() => {});
+      }
+      toast(`Attendance marked for ${m.name} (${byWho}) ✔`, "ok");
+      render();
+    }
+
+    function unmarkMemberAttendanceToday(memberId) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) return;
+      const t = todayS();
+      attm[memberId] = (attm[memberId] || []).filter(x => !x.startsWith(t));
+      saveLocalState();
+      toast(`Removed today's attendance for ${m.name}`, "warn");
+      render();
+    }
+
+    /* ============================================================================
+       6. PDF GENERATORS: A4 INVOICE PDF & PRINTABLE MEMBER ID CARD PDF
+       ============================================================================ */
+    const rcFromMember = (m, type) => ({
+      name: m.name,
+      bio: m.bio,
+      phone: m.phone,
+      bill: m.bill,
+      billDate: m.billDate,
+      type: type || (m.renewed ? "Renewal" : "Enrollment"),
+      plan: m.plan,
+      start: m.start,
+      end: m.end,
+      price: m.price !== undefined ? +m.price : +m.total || 0,
+      disc: +m.disc || 0,
+      reg: +m.reg || 0,
+      total: +m.total || 0,
+      paid: +m.paid || 0,
+      due: +m.due || 0,
+      mode: m.mode || "Online",
+      staff: m.staff || "Owner Direct",
+      ownerStatus: m.ownerStatus || "Verified ✔"
+    });
+
+    function receipt(r) {
+      const J = window.jspdf && window.jspdf.jsPDF;
+      if (!J) {
+        toast("PDF library not loaded yet. Please check your internet connection.", "err");
+        return;
+      }
+      const d = new J({ unit: "mm", format: "a4" });
+      const RED = [217, 32, 46], DK = [24, 26, 32], GR = [105, 110, 120], LT = [246, 247, 249], GN = [18, 140, 74], OR = [217, 138, 0];
+      const T = (t, x, y, o) => d.text(Array.isArray(t) ? t : String(t), x, y, o);
+      const F = (w, z) => { d.setFont("helvetica", w); d.setFontSize(z); };
+      const K = a => d.setTextColor(...a);
+      const invNo = "RCG-" + String(r.bill).padStart(4, "0");
+      const a0 = pd(r.start), b0 = pd(r.end);
+      const dur = a0 && b0 ? Math.round((b0 - a0) / 864e5) : 0;
+      const st = r.due <= 0 ? ["PAID IN FULL", GN] : r.paid > 0 ? ["PART PAYMENT", OR] : ["PAYMENT DUE", RED];
+
+      // Top Brand Banner + Official Logo + Center Watermark in PDF Invoice
+      d.setFillColor(...RED); d.rect(0, 0, 210, 6, "F");
+      d.setFillColor(...DK); d.rect(0, 6, 210, 1.2, "F");
+      try {
+        // 1. Center Page Watermark (5% Opacity)
+        if (d.GState) d.setGState(new d.GState({ opacity: 0.055 }));
+        d.addImage(RCG_LOGO_SRC, "PNG", 45, 105, 120, 120 / RCG_LOGO_AR);
+        if (d.GState) d.setGState(new d.GState({ opacity: 1 }));
+        // 2. Top-Left Official Header Logo (100% Opacity)
+        d.addImage(RCG_LOGO_SRC, "PNG", 15, 12, 54, Math.min(18, 54 / RCG_LOGO_AR));
+      } catch (e) {
+        F("bold", 16); K(DK); T("RED CROSS GYM", 15, 20);
+      }
+
+      F("normal", 8); K(GR);
+      [
+        "3rd Floor, Pramukh Chambers, Rander Road, Opposite ICICI Bank,",
+        "Siddhnath Mahadev Society, Tadwadi, Surat, Gujarat 395009",
+        "+917016294385  |  redcrossgymnasium@gmail.com"
+      ].forEach((t, i) => T(t, 15, 34 + i * 3.8));
+
+      F("bold", 26); K(DK); T("INVOICE", 195, 23, { align: "right" });
+      F("bold", 10); K(RED); T(invNo, 195, 30, { align: "right" });
+      F("normal", 9); K(GR); T("Issued on " + (r.billDate || toGB(new Date())), 195, 35.5, { align: "right" });
+      F("normal", 8); K(DK); T("Handled By: " + (r.staff || "Owner Direct") + "  |  " + (r.ownerStatus || "Verified"), 195, 41, { align: "right" });
+
+      d.setDrawColor(225, 227, 231); d.setLineWidth(0.3); d.line(15, 47, 195, 47);
+
+      const card = (x, l) => {
+        d.setFillColor(...LT); d.roundedRect(x, 52, 59, 38, 2.5, 2.5, "F");
+        d.setFillColor(...RED); d.rect(x, 52, 1.2, 38, "F");
+        F("bold", 7.5); K(RED); T(l, x + 5, 58);
+      };
+      card(15, "BILLED TO");
+      F("bold", d.getTextWidth(r.name) > 50 ? 10 : 12); K(DK); T(r.name, 20, 65.5);
+      F("bold", 10); K(RED); T("BIO ID: " + r.bio, 20, 72.5);
+      F("normal", 9.5); K(DK); T("Phone: " + (r.phone || "-"), 20, 78.5);
+      F("normal", 8); K(GR); T("Staff: " + (r.staff || "Owner Direct"), 20, 84.5);
+
+      card(75.5, "PLAN & VALIDITY");
+      F("bold", 9.5); K(DK); T(d.splitTextToSize(r.plan || "Membership", 50).slice(0, 2), 80.5, 64.5);
+      F("normal", 9); T("Valid from: " + r.start, 80.5, 75);
+      T("Valid till: " + (r.end || "-"), 80.5, 80);
+      K(GR); T("Duration: " + dur + " days", 80.5, 85.5);
+
+      card(136, "INVOICE DETAILS");
+      F("normal", 9); K(DK);
+      T("Invoice No: " + invNo, 141, 64.5);
+      T("Date: " + r.billDate, 141, 69.8);
+      T("Type: " + r.type, 141, 75.1);
+      T("Payment: " + r.mode, 141, 80.4);
+      T("Bill No: " + r.bill, 141, 85.7);
+
+      d.setFillColor(...DK); d.rect(15, 97, 180, 9, "F");
+      F("bold", 8.5); d.setTextColor(255);
+      T("DESCRIPTION", 19, 102.9); T("VALIDITY", 122, 102.9); T("AMOUNT", 191, 102.9, { align: "right" });
+
+      F("normal", 10.5); K(DK); T(d.splitTextToSize(r.plan || "Membership", 95).slice(0, 2), 19, 114);
+      F("normal", 7.5); K(GR); T("Duration " + dur + " days", 19, 121);
+      F("normal", 9); K(DK); T(r.start, 122, 112.8); T("to " + (r.end || "-"), 122, 117.6);
+      F("bold", 10.5); T(R2(r.price), 191, 114, { align: "right" });
+      d.setDrawColor(225, 227, 231); d.line(15, 124, 195, 124);
+
+      F("bold", 7.5); K(RED); T("PAYMENT DETAILS", 15, 132);
+      F("normal", 9.5); K(DK);
+      T("Mode of payment: " + r.mode, 15, 138.5);
+      T("Amount received: " + R2(r.paid), 15, 144.2);
+      d.setFillColor(...st[1]); d.roundedRect(15, 149, 42, 9, 2, 2, "F");
+      F("bold", 8.5); d.setTextColor(255); T(st[0], 36, 155, { align: "center" });
+      F("normal", 8); K(GR); T("Thank you for choosing Red Cross Gym.", 15, 165);
+
+      [["Sub-total", r.price], ["Discount", r.disc], ["Registration fee", r.reg]].forEach((x, i) => {
+        const y = 130 + i * 7.4;
+        F("normal", 9); K(GR); T(x[0], 118, y + 5);
+        F("normal", 9.5); K(DK); T(R2(x[1]), 191, y + 5, { align: "right" });
+        d.setDrawColor(235, 236, 240); d.line(115, y + 7.4, 195, y + 7.4);
+      });
+
+      d.setFillColor(...RED); d.roundedRect(115, 153, 80, 11, 2, 2, "F");
+      F("bold", 10.5); d.setTextColor(255);
+      T("GRAND TOTAL", 119, 160.2); T(R2(r.total), 191, 160.2, { align: "right" });
+
+      F("normal", 9); K(GR); T("PAID AMOUNT", 118, 171);
+      F("bold", 9.5); K(DK); T(R2(r.paid), 191, 171, { align: "right" });
+      F("normal", 9); K(GR); T(r.due > 0 ? "BALANCE DUE" : "DUE AMOUNT", 118, 177.6);
+      F("bold", 9.5); K(r.due > 0 ? RED : GN); T(R2(r.due), 191, 177.6, { align: "right" });
+
+      const wi = TERMS.findIndex(t => t[0] === "@");
+      const TA = TERMS.slice(0, wi), TB = TERMS.slice(wi + 1);
+      F("bold", 9); K(RED); T("TERMS & CONDITIONS", 15, 187);
+      d.setDrawColor(...RED); d.setLineWidth(0.5); d.line(15, 189, 52, 189);
+
+      F("normal", 6.8); K(DK);
+      let col = 0, y = 194;
+      const X = [15, 108], LH = 3.0, LIM = 283;
+      TA.forEach(t => {
+        const L = d.splitTextToSize(t, 87), h = L.length * LH + 1.4;
+        if (y + h > LIM) {
+          if (col === 0) { col = 1; y = 194; }
+          else { d.addPage(); col = 0; y = 20; }
+        }
+        T(L, X[col], y);
+        y += h;
+      });
+
+      d.addPage();
+      d.setFillColor(...DK); d.rect(15, 16, 180, 10, "F");
+      F("bold", 11); d.setTextColor(255); T("WELCOME GUIDE", 19, 22.8);
+      F("normal", 9.5); K(DK); y = 35;
+      TB.forEach(t => {
+        const L = d.splitTextToSize(t, 180), h = L.length * 4.3 + 2;
+        if (y + h > 280) { d.addPage(); y = 20; }
+        T(L, 15, y);
+        y += h;
+      });
+
+      const n = d.getNumberOfPages();
+      for (let p = 1; p <= n; p++) {
+        d.setPage(p);
+        if (p > 1) {
+          try {
+            if (d.GState) d.setGState(new d.GState({ opacity: 0.045 }));
+            d.addImage(RCG_LOGO_SRC, "PNG", 45, 115, 120, 120 / RCG_LOGO_AR);
+            if (d.GState) d.setGState(new d.GState({ opacity: 1 }));
+          } catch (e) {}
+        }
+        d.setFillColor(...RED); d.rect(0, 289, 210, 8, "F");
+        F("normal", 7.5); d.setTextColor(255);
+        T("Red Cross Gym  |  +917016294385  |  redcrossgymnasium@gmail.com", 15, 294);
+        T("Page " + p + " of " + n, 195, 294, { align: "right" });
+      }
+
+      const pay = {
+        v: 1, name: r.name, bio: String(r.bio), phone: r.phone || "", plan: r.plan,
+        start: r.start, end: r.end, bill: String(r.bill), billDate: r.billDate,
+        type: r.type, price: r.price, disc: r.disc, reg: r.reg, total: r.total,
+        paid: r.paid, due: r.due, mode: r.mode, staff: r.staff, ownerStatus: r.ownerStatus
+      };
+      d.setProperties({
+        title: "Invoice " + invNo + " - " + r.name,
+        subject: "Red Cross Gym invoice",
+        author: "Red Cross Gym",
+        creator: "Red Cross Gym Manager",
+        keywords: "RCGDATA:" + btoa(unescape(encodeURIComponent(JSON.stringify(pay))))
+      });
+      d.save("Invoice-" + r.bill + "-" + String(r.name).replace(/\W+/g, "_") + ".pdf");
+      toast(`Downloaded Invoice ${invNo} PDF ✔`, "ok");
+    }
+
+    function invoice(s) {
+      if (!s) return;
+      const m = members.find(x => x.id === s.memberId) || {};
+      const p = s.date.split("-").reverse().join("/");
+      const a = +s.amount || 0, dc = +s.discount || 0, du = +s.due || 0;
+      const price = s.price !== undefined ? +s.price : a + dc + du;
+      const tot = s.total !== undefined ? +s.total : a + du;
+      receipt({
+        name: s.customer,
+        bio: s.bio || m.bio || "-",
+        phone: s.phone || m.phone || "",
+        bill: s.bill || String(s.inv).replace(/\D/g, "").replace(/^0+/, "") || s.inv,
+        billDate: p,
+        type: s.rtype || (s.type === "PT" ? "Personal Training" : "Sale"),
+        plan: s.item,
+        start: s.start || m.start || p,
+        end: s.end || m.end || "",
+        price,
+        disc: dc,
+        reg: +s.reg || 0,
+        total: tot,
+        paid: a,
+        due: du,
+        mode: s.mode === "UPI" ? "Online" : s.mode,
+        staff: s.staff || m.staff || "Owner Direct",
+        ownerStatus: s.ownerStatus || m.ownerStatus || "Verified ✔"
+      });
+    }
+
+    // Printable Official Member ID Card PDF Generator
+    function downloadIdCardPdf(m) {
+      const J = window.jspdf && window.jspdf.jsPDF;
+      if (!J) { toast("PDF library not ready", "err"); return; }
+      const d = new J({ unit: "mm", format: "a4" });
+      const i = info(m);
+      const s = astats(attm[m.id] || []);
+      const RED = [217, 32, 46], DK = [20, 22, 28], GR = [110, 115, 125];
+
+      // Draw PVC-style ID Card Front & Back on A4 sheet
+      d.setFillColor(...DK);
+      d.roundedRect(35, 30, 140, 92, 5, 5, "F");
+      d.setFillColor(...RED);
+      d.roundedRect(35, 30, 140, 20, 5, 5, "F");
+      d.rect(35, 42, 140, 8, "F");
+
+      // Official Logo Badge on Printable ID Card + Subtle Watermark
+      try {
+        d.setFillColor(255, 255, 255);
+        d.roundedRect(39, 32.5, 42, 13.5, 2, 2, "F");
+        d.addImage(RCG_LOGO_SRC, "PNG", 40.5, 33.2, 39, 39 / RCG_LOGO_AR);
+        if (d.GState) {
+          d.setGState(new d.GState({ opacity: 0.05 }));
+          d.addImage(RCG_LOGO_SRC, "PNG", 78, 62, 65, 65 / RCG_LOGO_AR);
+          d.setGState(new d.GState({ opacity: 1 }));
+        }
+      } catch (e) {}
+
+      d.setFont("helvetica", "bold"); d.setFontSize(11); d.setTextColor(255, 255, 255);
+      d.text("OFFICIAL MEMBER ID CARD", 85, 41);
+      d.setFontSize(12);
+      d.text("BIO #" + m.bio, 168, 42, { align: "right" });
+
+      // Member initials badge box
+      d.setFillColor(40, 44, 55);
+      d.roundedRect(43, 56, 32, 38, 3, 3, "F");
+      d.setDrawColor(...RED); d.setLineWidth(0.8);
+      d.roundedRect(43, 56, 32, 38, 3, 3, "S");
+      const initials = String(m.name || "M").trim().split(/\s+/).map(x => x[0]).join("").slice(0, 2).toUpperCase();
+      d.setFontSize(22); d.setTextColor(255, 255, 255);
+      d.text(initials, 59, 78, { align: "center" });
+
+      // Member details
+      d.setFont("helvetica", "bold"); d.setFontSize(16); d.setTextColor(255, 255, 255);
+      d.text(String(m.name).slice(0, 24), 82, 63);
+      d.setFont("helvetica", "normal"); d.setFontSize(10); d.setTextColor(200, 205, 215);
+      d.text("Phone: " + (m.phone || "-"), 82, 70);
+      d.text("Plan: " + String(m.plan || "").slice(0, 34), 82, 76);
+      d.text("Valid: " + fmt(pd(m.start)) + " to " + fmt(pd(m.end)), 82, 82);
+      d.text("Assigned Trainer/Staff: " + (m.staff || "Staff"), 82, 88);
+
+      // Status Pill & Days Remaining
+      d.setFillColor(...(i.st[0] === "Active" ? [18, 161, 80] : i.st[0] === "Expiring soon" ? [217, 138, 0] : [192, 38, 45]));
+      d.roundedRect(82, 92, 42, 8, 2, 2, "F");
+      d.setFont("helvetica", "bold"); d.setFontSize(9); d.setTextColor(255, 255, 255);
+      d.text(i.st[0].toUpperCase(), 103, 97.3, { align: "center" });
+
+      d.setFontSize(11); d.setTextColor(255, 255, 255);
+      d.text(i.left + " Days Left", 168, 97.3, { align: "right" });
+
+      // Bottom Footer bar on card
+      d.setFillColor(30, 33, 42);
+      d.rect(35, 108, 140, 14, "F");
+      d.setFontSize(8); d.setTextColor(...GR);
+      d.text(`Attendance Total: ${s.total} Days  |  This Month: ${s.month} Days  |  Owner Status: ${m.ownerStatus || "Verified"}`, 105, 116, { align: "center" });
+
+      d.save(`ID-Card-BIO-${m.bio}-${String(m.name).replace(/\W+/g, "_")}.pdf`);
+      toast(`Downloaded ID Card PDF for ${m.name} ✔`, "ok");
+    }
+
+    /* ============================================================================
+       7. INTERACTIVE SVG CHARTS & GRAPHS ENGINE
+       ============================================================================ */
+    const rng = () => {
+      const n = new Date(), y = n.getFullYear(), m = n.getMonth();
+      let f, t = todayS();
+      if (R.k === "today") f = t;
+      else if (R.k === "week") { const w = new Date(); w.setDate(w.getDate() - 6); f = iso(w); }
+      else if (R.k === "month") f = iso(new Date(y, m, 1));
+      else if (R.k === "year") f = iso(new Date(y, 0, 1));
+      else if (R.k === "all") f = "2020-01-01";
+      else { f = R.from || iso(new Date(y, m, 1)); t = R.to || t; }
+      return [f, t];
+    };
+    const inR = (x, r) => x.date >= r[0] && x.date <= r[1];
+    const daysIn = r => {
+      if (R.k === "all") {
+        const dates = [...C.sales.map(x => x.date), ...C.expenses.map(x => x.date)].sort();
+        if (!dates.length) return 30;
+        return Math.max(1, difD(dates[0], todayS()) + 1);
+      }
+      return Math.max(1, difD(r[0], r[1]) + 1);
+    };
+
+    const svgGrid = (W, H, L, mx) => [0, 0.25, 0.5, 0.75, 1].map(f => {
+      const y = H - f * H;
+      return `<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="currentColor" opacity=".12"/>
+              <text x="${L - 6}" y="${y + 3}" font-size="9" text-anchor="end" fill="currentColor" opacity=".65">${shortNum(mx * f)}</text>`;
+    }).join("");
+
+    function chartBars(rows) {
+      if (!rows.length) return '<p class="msg">No chart data in this period.</p>';
+      const W = 660, H = 190, L = 52, n = rows.length;
+      const mx = Math.max(1, ...rows.flatMap(r => [r[1], r[2]]));
+      const bw = (W - L) / n, w = Math.max(3, Math.min(22, bw * 0.36));
+      return `<svg viewBox="0 0 ${W} ${H + 24}" style="width:100%;height:auto">${svgGrid(W, H, L, mx)}` +
+        rows.map((r, i) => {
+          const x = L + i * bw + bw / 2 - w - 0.5, h1 = (r[1] / mx) * H, h2 = (r[2] / mx) * H;
+          return `<rect x="${x}" y="${H - h1}" width="${w}" height="${h1}" fill="#d9202e" rx="3"><title>${r[0]} — Sales: ${inr(r[1])}</title></rect>
+                  <rect x="${x + w + 1.5}" y="${H - h2}" width="${w}" height="${h2}" fill="#64748b" rx="3"><title>${r[0]} — Expenses: ${inr(r[2])}</title></rect>` +
+                  (i % Math.ceil(n / 12) === 0 ? `<text x="${x + w}" y="${H + 15}" font-size="9.5" text-anchor="middle" fill="currentColor" opacity=".75">${r[0]}</text>` : "");
+        }).join("") + "</svg>";
+    }
+
+    function chartArea(rows) {
+      if (!rows.length) return '<p class="msg">No trend data in this period.</p>';
+      const W = 660, H = 175, L = 52, n = rows.length;
+      const mx = Math.max(1, ...rows.map(r => r[1]));
+      const st = n > 1 ? (W - L - 16) / (n - 1) : 0;
+      const pt = rows.map((r, i) => [L + 8 + i * st, H - (r[1] / mx) * H]);
+      const ln = pt.map(p => p.join(",")).join(" ");
+      return `<svg viewBox="0 0 ${W} ${H + 24}" style="width:100%;height:auto">${svgGrid(W, H, L, mx)}
+        <polygon points="${pt[0][0]},${H} ${ln} ${pt[n - 1][0]},${H}" fill="#d9202e" opacity=".18"/>
+        <polyline points="${ln}" fill="none" stroke="#d9202e" stroke-width="2.6" stroke-linejoin="round"/>` +
+        pt.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="${n > 35 ? 2 : 3.8}" fill="#d9202e"><title>${rows[i][0]}: ${inr(rows[i][1])}</title></circle>` +
+          (i % Math.ceil(n / 12) === 0 ? `<text x="${p[0]}" y="${H + 15}" font-size="9.5" text-anchor="middle" fill="currentColor" opacity=".75">${rows[i][0]}</text>` : "")).join("") + "</svg>";
+    }
+
+    function chartDonut(it) {
+      const t = it.reduce((a, b) => a + b[1], 0), P = 2 * Math.PI * 58;
+      let a = 0;
+      return `<svg viewBox="0 0 160 160" style="width:145px;flex:none">` +
+        (t ? it.map((x, i) => {
+          const l = (x[1] / t) * P;
+          const c = `<circle r="58" cx="80" cy="80" fill="none" stroke="${COL[i % COL.length]}" stroke-width="22" stroke-dasharray="${l} ${P - l}" stroke-dashoffset="${-a}" transform="rotate(-90 80 80)"><title>${esc(x[0])}: ${inr(x[1])}</title></circle>`;
+          a += l;
+          return c;
+        }).join("") : '<circle r="58" cx="80" cy="80" fill="none" stroke="currentColor" opacity=".1" stroke-width="22"/>') +
+        `<text x="80" y="75" text-anchor="middle" font-size="10" fill="currentColor" opacity=".6">Total</text>
+         <text x="80" y="93" text-anchor="middle" font-size="13.5" font-weight="800" fill="currentColor">${shortNum(t)}</text></svg>`;
+    }
+
+    const chartLegend = it => {
+      const tot = it.reduce((a, b) => a + b[1], 0) || 1;
+      return it.map((m, i) => `<div style="font-size:12.5px;margin:4px 0;display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <span><span style="color:${COL[i % COL.length]}">●</span> ${esc(m[0])}</span>
+        <b>${inr(m[1])} <span style="color:var(--mut);font-weight:500">(${Math.round((m[1] / tot) * 100)}%)</span></b>
+      </div>`).join("") || '<span class="msg">No data yet.</span>';
+    };
+
+    const dnBlock = it => `<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:10px">${chartDonut(it)}<div style="flex:1;min-width:160px">${chartLegend(it)}</div></div>`;
+
+    function chartHBars(it) {
+      const mx = Math.max(1, ...it.map(x => x[1]));
+      return it.map((x, i) => `<div style="display:flex;align-items:center;gap:10px;margin:8px 0">
+        <span style="width:155px;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(x[0])}">${esc(x[0])}</span>
+        <div style="flex:1;background:var(--bd);border-radius:8px;height:14px;overflow:hidden">
+          <div style="width:${(x[1] / mx) * 100}%;background:${COL[i % COL.length]};height:100%;border-radius:8px"></div>
+        </div>
+        <b style="font-size:12.5px;min-width:74px;text-align:right">${inr(x[1])}</b>
+      </div>`).join("") || '<span class="msg">No data yet.</span>';
+    }
+
+    const grp = (a, k) => Object.entries(a.reduce((o, x) => {
+      const key = x[k] || "Unassigned";
+      o[key] = (o[key] || 0) + (+x.amount || 0);
+      return o;
+    }, {})).sort((a, b) => b[1] - a[1]);
+
+    /* ============================================================================
+       8. PERIOD FILTER BAR & DAY / MONTH / YEAR BREAKDOWN ENGINE
+       ============================================================================ */
+    const rb = () => {
+      const b = (k, l) => `<button class="${R.k === k ? "" : "g"} sm" data-r="${k}" style="border-radius:99px;padding:7px 14px">${l}</button>`;
+      const r = rng();
+      return `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0 12px;background:var(--card);padding:10px 14px;border-radius:14px;border:1px solid var(--bd)">
+        <span style="font-size:12px;font-weight:700;color:var(--mut);margin-right:4px"><i class="fa-regular fa-calendar-days"></i> Period:</span>
+        ${b("today", "Today")}
+        ${b("week", "Last 7 Days")}
+        ${b("month", "This Month")}
+        ${b("year", "This Year")}
+        ${b("all", "All Time")}
+        ${b("custom", "Custom Range 📅")}
+        ${R.k === "custom" ? `
+          <input type="date" data-rd="from" value="${r[0]}" style="width:auto;padding:5px 10px">
+          <span class="msg" style="margin:0">to</span>
+          <input type="date" data-rd="to" value="${r[1]}" style="width:auto;padding:5px 10px">
+        ` : `<span class="msg" style="margin:0 0 0 auto;font-weight:600">${r[0]} → ${r[1]}</span>`}
+      </div>`;
+    };
+
+    const kc = (l, v, sub, g) => `<div class="kc" style="background:linear-gradient(135deg,${g})"><small>${l}</small><b>${v}</b>${sub ? `<em>${sub}</em>` : ""}</div>`;
+    const kg = a => `<div class="kgrid">${a.join("")}</div>`;
+    const cd = (t, h, s) => `<div class="box" style="margin-top:14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px"><b style="font-size:15px">${t}</b>${s ? `<span class="msg" style="margin:0">${s}</span>` : ""}</div>${h}</div>`;
+
+    // View 1: Total Business Analysis & Executive Dashboard
+    function viewDashboard() {
+      const r = rng();
+      const S = C.sales.filter(x => inR(x, r));
+      const E = C.expenses.filter(x => inR(x, r));
+      const d = daysIn(r);
+      const ts = sum(S, "amount");
+      const te = sum(E, "amount");
+      const net = ts - te;
+      const margin = ts > 0 ? ((net / ts) * 100).toFixed(1) + "%" : "0%";
+      const totalDues = sum(members, "due");
+      const activeCount = members.filter(m => info(m).st[0] === "Active").length;
+
+      const t = todayS(), ymStr = t.slice(0, 7), yr = t.slice(0, 4);
+      const todaySales = sum(C.sales.filter(x => x.date === t));
+      const todayExp = sum(C.expenses.filter(x => x.date === t));
+      const monthSales = sum(C.sales.filter(x => x.date.slice(0, 7) === ymStr));
+      const monthExp = sum(C.expenses.filter(x => x.date.slice(0, 7) === ymStr));
+      const yearSales = sum(C.sales.filter(x => x.date.slice(0, 4) === yr));
+      const yearExp = sum(C.expenses.filter(x => x.date.slice(0, 4) === yr));
+
+      const rows = [], ym = [];
+      if (d <= 62) {
+        const startD = R.k === "all" ? addD(t, -29) : r[0];
+        const loopD = R.k === "all" ? 30 : d;
+        for (let i = 0; i < loopD; i++) {
+          const k = addD(startD, i);
+          rows.push([k.slice(5), sum(S.filter(x => x.date === k)), sum(E.filter(x => x.date === k))]);
+        }
+      } else {
+        const ms = {};
+        S.forEach(x => { const k = x.date.slice(0, 7); (ms[k] = ms[k] || [k, 0, 0])[1] += +x.amount; });
+        E.forEach(x => { const k = x.date.slice(0, 7); (ms[k] = ms[k] || [k, 0, 0])[2] += +x.amount; });
+        rows.push(...Object.keys(ms).sort().map(k => ms[k]));
+      }
+
+      for (let i = 1; i <= 12; i++) {
+        const k = yr + "-" + String(i).padStart(2, "0");
+        ym.push([
+          ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][i - 1],
+          sum(C.sales.filter(x => x.date.slice(0, 7) === k)),
+          sum(C.expenses.filter(x => x.date.slice(0, 7) === k))
+        ]);
+      }
+
+      const settledSum = sum(S.filter(x => x.ownerStatus === "Settled to Owner" || x.ownerStatus === "Verified ✔"));
+
+      return `
+        <!-- Quick Per Day / Month / Year Summary Bar -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <span class="chip"><i class="fa-solid fa-bolt" style="color:var(--red)"></i> Today Sale: <b style="color:var(--ok)">${inr(todaySales)}</b> | Exp: <b>${inr(todayExp)}</b></span>
+          <span class="chip"><i class="fa-solid fa-calendar-week" style="color:var(--blue)"></i> This Month Sale: <b style="color:var(--ok)">${inr(monthSales)}</b> | Net: <b>${inr(monthSales - monthExp)}</b></span>
+          <span class="chip"><i class="fa-solid fa-chart-line" style="color:var(--purple)"></i> ${yr} Year Sale: <b style="color:var(--ok)">${inr(yearSales)}</b> | Net: <b>${inr(yearSales - yearExp)}</b></span>
+          <button class="g sm" style="margin-left:auto" onclick="mainTab='breakdown';render()"><i class="fa-solid fa-table-list"></i> Full Day/Month/Year Table</button>
+        </div>
+
+        ${rb()}
+
+        <!-- Total Business Analysis KPI Grid -->
+        ${kg([
+          kc("Total Sales Revenue", inr(ts), `${S.length} invoices in period`, "#d9202e, #990f19"),
+          kc("Total Expenses", inr(te), `${E.length} vouchers logged`, "#475569, #1e293b"),
+          kc("Net Profit / Cashflow", inr(net), `Profit Margin: ${margin}`, net < 0 ? "#b91c1c, #7f1d1d" : "#0f9d58, #065f46"),
+          kc("Per Day Avg Sale", inr(ts / d), `Avg Exp/Day: ${inr(te / d)}`, "#2563eb, #1e40af"),
+          kc("Pending Member Dues", inr(totalDues), `${members.filter(x => +x.due > 0).length} members with balance`, "#d98a00, #92400e"),
+          kc("Owner Verified / Settled", inr(settledSum), `${activeCount}/${members.length} Active Members`, "#7c3aed, #4c1d95")
+        ])}
+
+        <div class="two-col">
+          ${cd("📈 Daily / Period Sales Revenue Trend", chartArea(rows), `${r[0]} to ${r[1]}`)}
+          ${cd("📊 Sales vs. Expenses Comparison", chartBars(rows), `<span style="color:#d9202e">■</span> Sales &nbsp; <span style="color:#64748b">■</span> Expenses`)}
+        </div>
+
+        <div class="two-col">
+          ${cd("💳 Revenue by Payment Mode", dnBlock(grp(S, "mode")), "UPI / Cash / Card")}
+          ${cd("🧾 Expense Breakdown by Category", dnBlock(grp(E, "category")), "Where money goes")}
+        </div>
+
+        <div class="two-col">
+          ${cd("🏆 Best-Selling Gym & PT Packages", chartHBars(grp(S, "item").slice(0, 6)), "Top revenue generators")}
+          ${cd("👥 Staff vs. Owner Sales Contribution", chartHBars(grp(S, "staff")), "Revenue handled by Staff & Owner")}
+        </div>
+
+        ${cd("📅 Month-by-Month Financial Performance (" + yr + ")", chartBars(ym), "Jan – Dec Sales vs Expenses")}
+      `;
+    }
+
+    // View 2: Per Day / Per Month / Per Year Financial Breakdown View
+    function viewBreakdown() {
+      // Group all sales and expenses by day, month, and year
+      const groupPeriod = (sliceLen) => {
+        const map = {};
+        C.sales.forEach(s => {
+          const k = (s.date || todayS()).slice(0, sliceLen);
+          if (!map[k]) map[k] = { period: k, sCount: 0, sales: 0, disc: 0, due: 0, exp: 0, eCount: 0, staffSet: new Set(), settled: 0 };
+          map[k].sCount++;
+          map[k].sales += (+s.amount || 0);
+          map[k].disc += (+s.discount || 0);
+          map[k].due += (+s.due || 0);
+          if (s.staff) map[k].staffSet.add(s.staff);
+          if (s.ownerStatus === "Settled to Owner" || s.ownerStatus === "Verified ✔") map[k].settled += (+s.amount || 0);
+        });
+        C.expenses.forEach(e => {
+          const k = (e.date || todayS()).slice(0, sliceLen);
+          if (!map[k]) map[k] = { period: k, sCount: 0, sales: 0, disc: 0, due: 0, exp: 0, eCount: 0, staffSet: new Set(), settled: 0 };
+          map[k].eCount++;
+          map[k].exp += (+e.amount || 0);
+          if (e.staff) map[k].staffSet.add(e.staff);
+        });
+        return Object.values(map).sort((a, b) => b.period.localeCompare(a.period));
+      };
+
+      const sliceLen = breakdownMode === "day" ? 10 : breakdownMode === "month" ? 7 : 4;
+      const rows = groupPeriod(sliceLen);
+      const totSales = rows.reduce((a, b) => a + b.sales, 0);
+      const totExp = rows.reduce((a, b) => a + b.exp, 0);
+      const totNet = totSales - totExp;
+
+      return `
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+            <div>
+              <h2 style="margin:0;font-size:18px;font-weight:800">📊 Per Day / Month / Year Sales &amp; Expense Breakdown</h2>
+              <p class="msg" style="margin:2px 0 0">Complete chronological ledger with Staff attribution and Owner settlement tracking</p>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="${breakdownMode === 'day' ? '' : 'g'}" onclick="breakdownMode='day';render()">📅 Per Day Data</button>
+              <button class="${breakdownMode === 'month' ? '' : 'g'}" onclick="breakdownMode='month';render()">🗓️ Per Month Data</button>
+              <button class="${breakdownMode === 'year' ? '' : 'g'}" onclick="breakdownMode='year';render()">📈 Per Year Data</button>
+            </div>
+          </div>
+
+          ${kg([
+            kc(`Total Sales (${breakdownMode.toUpperCase()})`, inr(totSales), `${rows.length} active ${breakdownMode}s`, "#d9202e, #990f19"),
+            kc(`Total Expenses (${breakdownMode.toUpperCase()})`, inr(totExp), `Avg ${inr(totExp / Math.max(1, rows.length))} / ${breakdownMode}`, "#475569, #1e293b"),
+            kc(`Net Profit (${breakdownMode.toUpperCase()})`, inr(totNet), `Avg ${inr(totNet / Math.max(1, rows.length))} / ${breakdownMode}`, totNet >= 0 ? "#0f9d58, #065f46" : "#b91c1c, #7f1d1d")
+          ])}
+
+          <div style="overflow-x:auto;margin-top:12px">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>${breakdownMode === "day" ? "Date (YYYY-MM-DD)" : breakdownMode === "month" ? "Month (YYYY-MM)" : "Year (YYYY)"}</th>
+                  <th>Invoices</th>
+                  <th>Total Sales (Paid)</th>
+                  <th>Discounts</th>
+                  <th>Pending Dues</th>
+                  <th>Expenses</th>
+                  <th>Net Profit</th>
+                  <th>Margin %</th>
+                  <th class="col-staff">Staff Column (Handled By)</th>
+                  <th class="col-owner">Owner Column (Verified/Settled)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows.map(r => {
+                  const net = r.sales - r.exp;
+                  const mg = r.sales > 0 ? Math.round((net / r.sales) * 100) + "%" : "–";
+                  return `<tr>
+                    <td><b>${esc(r.period)}</b></td>
+                    <td>${r.sCount} sales · ${r.eCount} exp</td>
+                    <td style="color:var(--ok);font-weight:700">${inr(r.sales)}</td>
+                    <td>${r.disc ? inr(r.disc) : "–"}</td>
+                    <td style="color:${r.due ? 'var(--red)' : 'var(--mut)'};font-weight:600">${r.due ? inr(r.due) : "₹0"}</td>
+                    <td style="color:#f87171;font-weight:600">${inr(r.exp)}</td>
+                    <td style="color:${net >= 0 ? 'var(--ok)' : 'var(--red)'};font-weight:800">${inr(net)}</td>
+                    <td><span class="chip" style="padding:2px 8px;font-size:11px">${mg}</span></td>
+                    <td class="col-staff"><span style="font-size:12px">${esc(Array.from(r.staffSet).join(", ") || "Owner Direct")}</span></td>
+                    <td class="col-owner"><b style="color:var(--purple)">${inr(r.settled)}</b> <span class="msg">settled</span></td>
+                  </tr>`;
+                }).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    /* ============================================================================
+       9. MEMBERS DIRECTORY, DEDICATED ID CARD COLUMN & ATTENDANCE COLUMN
+       ============================================================================ */
+    function renderMemberCard(m, i) {
+      const s = astats(attm[m.id] || []);
+      return `
+        <div class="id" data-id="${esc(m.id)}">
+          <div>
+            <div class="top">
+              <span style="display:inline-flex;align-items:center;gap:6px"><img src="${RCG_LOGO_SRC}" alt="Red Cross Gym" style="height:18px;background:#fff;border-radius:4px;padding:1px 4px"> RED CROSS GYM</span>
+              <span>BIO #${esc(m.bio)}</span>
+            </div>
+            <div class="bd">
+              <img class="ph" src="${esc(m.photo || avatarUrl(m.name))}" onerror="this.src='${avatarUrl(m.name)}'" alt="${esc(m.name)}">
+              <div style="flex:1;min-width:0">
+                <h3 style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.name)}</h3>
+                <p><i class="fa-solid fa-phone" style="font-size:10px"></i> ${esc(m.phone)} &nbsp;·&nbsp; Bill #${esc(m.bill)}</p>
+                <p style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--tx);margin-top:2px">${esc(m.plan)}</p>
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px">
+                  <span class="pill" style="background:${i.st[1]}">${i.st[0]}</span>
+                  ${s.today ? `<span class="pill" style="background:#0891b2"><i class="fa-solid fa-check"></i> Present Today</span>` : ""}
+                  ${+m.due > 0 ? `<span class="pill" style="background:#b91c1c">Due ${inr(m.due)}</span>` : ""}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="padding:0 14px 6px;font-size:11.5px;color:var(--mut);display:flex;justify-content:space-between">
+              <span><i class="fa-solid fa-user-tie"></i> Staff: <b style="color:var(--tx)">${esc(m.staff || "Staff")}</b></span>
+              <span><i class="fa-solid fa-shield-halved"></i> Owner: <b style="color:var(--purple)">${esc(m.ownerStatus || "Verified ✔")}</b></span>
+            </div>
+            <div class="days">
+              <span>${fmt(pd(m.start))} → ${fmt(pd(m.end))}</span>
+              <span><b>${i.left}</b> days left</span>
+            </div>
+            <div class="bar"><i style="width:${i.pct}%;background:${i.st[1]}"></i></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function viewMembersAndIdCards(onlyIdCards = false) {
+      const list = members
+        .map(m => ({ m, i: info(m), a: astats(attm[m.id] || []) }))
+        .filter(x => (x.m.name + x.m.bio + x.m.phone + (x.m.staff || "") + (x.m.ownerStatus || "")).toLowerCase().includes(q.toLowerCase()) && (flt === "all" || x.i.st[0] === flt))
+        .sort((a, b) => a.i.left - b.i.left);
+
+      const all = members.map(info);
+      const countBy = f => all.filter(f).length;
+
+      return `
+        <div class="stats">
+          ${[
+            ["all", "Total Members", members.length, ""],
+            ["Active", "Active ID Cards", countBy(x => x.st[0] === "Active"), "var(--ok)"],
+            ["Expiring soon", "Expiring (≤7d)", countBy(x => x.st[0] === "Expiring soon"), "var(--warn)"],
+            ["Expired", "Expired", countBy(x => x.st[0] === "Expired"), "#c0262d"],
+            ["Upcoming", "Upcoming", countBy(x => x.st[0] === "Upcoming"), "var(--blue)"]
+          ].map(([f, l, n, col]) => `
+            <div class="stat${flt === f ? " on" : ""}" data-f="${f}" style="cursor:pointer">
+              <b${col ? ` style="color:${col}"` : ""}>${n}</b>
+              <span>${l}</span>
+            </div>
+          `).join("")}
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+          <input id="q" placeholder="🔍 Search member name, BIO ID, phone, Staff trainer, or Owner status..." value="${esc(q)}" style="flex:1;min-width:240px">
+          <div style="display:flex;gap:6px">
+            <button class="${memberViewMode === 'both' ? '' : 'g'} sm" onclick="memberViewMode='both';render()"><i class="fa-solid fa-table-columns"></i> Cards + Table</button>
+            <button class="${memberViewMode === 'table' ? '' : 'g'} sm" onclick="memberViewMode='table';render()"><i class="fa-solid fa-table"></i> Master Table</button>
+            <button class="${memberViewMode === 'grid' ? '' : 'g'} sm" onclick="memberViewMode='grid';render()"><i class="fa-solid fa-id-card"></i> ID Cards Grid</button>
+          </div>
+          <button onclick="addView()"><i class="fa-solid fa-user-plus"></i> + Add Member / Bill</button>
+        </div>
+
+        ${(memberViewMode === "table" || memberViewMode === "both") ? `
+          <div class="box" style="margin-bottom:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+              <b><i class="fa-solid fa-table"></i> Master Member Register (with ID Card, Attendance, Staff &amp; Owner Columns)</b>
+              <span class="msg" style="margin:0">Showing ${list.length} members</span>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Member &amp; Phone</th>
+                    <th class="col-idcard"><i class="fa-solid fa-id-card"></i> ID Card Column</th>
+                    <th>Plan &amp; Validity</th>
+                    <th class="col-att"><i class="fa-solid fa-calendar-check"></i> Member Attendance</th>
+                    <th>Fee / Due / Invoice</th>
+                    <th class="col-staff"><i class="fa-solid fa-user-tie"></i> Staff Column</th>
+                    <th class="col-owner"><i class="fa-solid fa-crown"></i> Owner Column</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${list.map(({ m, i, a }) => `
+                    <tr>
+                      <td>
+                        <div style="display:flex;align-items:center;gap:10px">
+                          <img src="${esc(m.photo || avatarUrl(m.name))}" onerror="this.src='${avatarUrl(m.name)}'" style="width:38px;height:46px;border-radius:8px;object-fit:cover;border:1px solid var(--bd)">
+                          <div>
+                            <b style="font-size:14px;cursor:pointer;color:var(--tx)" onclick="detail('${esc(m.id)}')">${esc(m.name)}</b>
+                            <div class="msg" style="margin:0">${esc(m.phone)}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="col-idcard">
+                        <div style="display:flex;flex-direction:column;gap:4px">
+                          <div>
+                            <span style="font-weight:800;font-size:12px;color:var(--red)">BIO #${esc(m.bio)}</span>
+                            <span class="pill" style="background:${i.st[1]};margin-left:4px;font-size:10px;padding:1px 7px">${i.st[0]}</span>
+                          </div>
+                          <div style="display:flex;gap:4px">
+                            <button class="g sm" onclick="previewIdCardModal('${esc(m.id)}')" title="Open Digital ID Card"><i class="fa-solid fa-id-badge"></i> View ID</button>
+                            <button class="g sm" onclick="downloadIdCardPdf(members.find(x=>x.id==='${esc(m.id)}'))" title="Download Printable ID PDF"><i class="fa-solid fa-print"></i> PDF</button>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div style="font-weight:600;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.plan)}</div>
+                        <div class="msg" style="margin:0">${fmt(pd(m.start))} → ${fmt(pd(m.end))} (<b>${i.left}d</b> left)</div>
+                      </td>
+                      <td class="col-att">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                          <div>
+                            <div style="font-size:12px">Month: <b>${a.month}d</b> · Total: <b>${a.total}d</b> · 🔥<b>${a.streak}</b></div>
+                            <div class="msg" style="margin:0;font-size:11px">${a.last ? "Last: " + fmtA(a.last)[0] + " " + fmtA(a.last)[2] : "No visits yet"}</div>
+                          </div>
+                          ${a.today
+                            ? `<button class="sm" style="background:#12a150" onclick="unmarkMemberAttendanceToday('${esc(m.id)}')" title="Click to undo">✔ Today</button>`
+                            : `<button class="g sm" onclick="markMemberAttendance('${esc(m.id)}', '${esc(role === 'owner' ? 'Owner' : activeStaffName)}')">+ Mark</button>`
+                          }
+                        </div>
+                      </td>
+                      <td>
+                        <div>Paid: <b>${inr(m.paid)}</b></div>
+                        <div style="font-size:11.5px;color:${+m.due > 0 ? 'var(--red)' : 'var(--mut)'};font-weight:700">${+m.due > 0 ? "Due: " + inr(m.due) : "No Due"}</div>
+                      </td>
+                      <td class="col-staff">
+                        <select style="padding:4px 8px;font-size:12px;width:135px" onchange="updateMemberStaff('${esc(m.id)}', this.value)">
+                          ${allStaffNames().map(sName => `<option ${m.staff === sName ? "selected" : ""}>${esc(sName)}</option>`).join("")}
+                        </select>
+                      </td>
+                      <td class="col-owner">
+                        <div style="display:flex;flex-direction:column;gap:3px">
+                          <select style="padding:4px 8px;font-size:12px;width:140px;font-weight:700;color:var(--purple)" ${role !== "owner" ? "disabled" : ""} onchange="updateMemberOwnerStatus('${esc(m.id)}', this.value)">
+                            ${OWNER_STATUSES.map(stName => `<option ${(m.ownerStatus || "Verified ✔") === stName ? "selected" : ""}>${esc(stName)}</option>`).join("")}
+                          </select>
+                          <span style="font-size:11px;color:var(--mut)">${esc(m.ownerNote || "Click Details to edit note")}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div style="display:flex;gap:4px">
+                          <button class="g sm" onclick="detail('${esc(m.id)}')"><i class="fa-solid fa-eye"></i></button>
+                          <button class="g sm" onclick="receipt(rcFromMember(members.find(x=>x.id==='${esc(m.id)}')))" title="Download Invoice PDF"><i class="fa-solid fa-file-invoice"></i></button>
+                        </div>
+                      </td>
+                    </tr>
+                  `).join("") || `<tr><td colspan="8" class="msg" style="text-align:center;padding:24px">No matching members found.</td></tr>`}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ` : ""}
+
+        ${(memberViewMode === "grid" || memberViewMode === "both" || onlyIdCards) ? `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 6px">
+            <b><i class="fa-solid fa-id-card-clip"></i> Digital Member ID Cards (${list.length})</b>
+            <span class="msg" style="margin:0">Tap any ID card to inspect, print ID PDF, or generate invoice</span>
+          </div>
+          <div class="grid-cards">
+            ${list.map(({ m, i }) => renderMemberCard(m, i)).join("") || '<p class="msg">No members in this filter.</p>'}
+          </div>
+        ` : ""}
+      `;
+    }
+
+    function updateMemberStaff(memberId, staffName) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) return;
+      m.staff = staffName;
+      saveLocalState();
+      toast(`Assigned ${m.name} to ${staffName}`, "ok");
+    }
+
+    function updateMemberOwnerStatus(memberId, statusVal) {
+      if (role !== "owner") { toast("Only the Gym Owner can change Owner verification status.", "err"); return; }
+      const m = members.find(x => x.id === memberId);
+      if (!m) return;
+      m.ownerStatus = statusVal;
+      saveLocalState();
+      toast(`Owner Status updated to "${statusVal}" for ${m.name}`, "ok");
+    }
+
+    // Full Digital ID Card Modal
+    function previewIdCardModal(memberId) {
+      const m = members.find(x => x.id === memberId);
+      if (!m) return;
+      const d = modal(`
+        ${mcard(m)}
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button style="flex:1" onclick="downloadIdCardPdf(members.find(x=>x.id==='${esc(m.id)}'))"><i class="fa-solid fa-print"></i> Download / Print ID Card PDF</button>
+          <button class="g" id="id-close">Close</button>
+        </div>
+      `, "540px");
+      d.querySelector("#id-close").onclick = () => d.remove();
+    }
+
+    /* ============================================================================
+       10. CENTRAL MEMBER ATTENDANCE VIEW (STAFF / OWNER / KIOSK)
+       ============================================================================ */
+    function viewAttendanceHub() {
+      const t = todayS();
+      const presentTodayCount = members.filter(m => (attm[m.id] || []).some(x => x.startsWith(t))).length;
+      const activeTotal = members.filter(m => info(m).st[0] === "Active").length || 1;
+      const allVisitsThisMonth = members.reduce((acc, m) => acc + astats(attm[m.id] || []).month, 0);
+
+      const filtered = members
+        .map(m => ({ m, i: info(m), a: astats(attm[m.id] || []) }))
+        .filter(x => (x.m.name + x.m.bio + x.m.phone).toLowerCase().includes(q.toLowerCase()))
+        .sort((a, b) => (b.a.today ? 1 : 0) - (a.a.today ? 1 : 0) || b.a.streak - a.a.streak);
+
+      return `
+        <div class="box" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;background:linear-gradient(135deg, var(--card), var(--card-alt))">
+          <div>
+            <div style="font-size:12px;font-weight:800;color:var(--red);letter-spacing:0.08em">LIVE GYM ACCESS &amp; BIOMETRIC ATTENDANCE DESK</div>
+            <div id="cdt" style="font-size:20px;font-weight:800;margin-top:2px"></div>
+            <div class="msg" style="margin:2px 0 0">Mark daily attendance by BIO ID or Phone, track streaks, and audit Staff check-ins</div>
+          </div>
+          <div id="clk" style="font-size:36px;font-weight:900;color:var(--red);font-variant-numeric:tabular-nums"></div>
+        </div>
+
+        ${kg([
+          kc("Present Today", `${presentTodayCount} Members`, `${Math.round((presentTodayCount / activeTotal) * 100)}% of active members`, "#12a150, #065f46"),
+          kc("Total Visits This Month", `${allVisitsThisMonth} Check-ins`, `Across ${members.length} enrolled members`, "#2563eb, #1e40af"),
+          kc("Top Active Streak", `${Math.max(0, ...members.map(m => astats(attm[m.id] || []).streak))} Days 🔥`, "Consistent gym attendance", "#d98a00, #92400e")
+        ])}
+
+        <div class="box" style="margin-top:12px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+            <input id="q" placeholder="🔍 Quick Check-In: Type Member Name, BIO ID (e.g. 10201) or Phone..." value="${esc(q)}" style="flex:1;min-width:240px">
+            <button class="g" onclick="openMemberKioskMode()"><i class="fa-solid fa-mobile-screen"></i> Open Member Self-Check-In Kiosk</button>
+          </div>
+
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="col-idcard">BIO ID &amp; Card</th>
+                  <th>Member Name</th>
+                  <th>Membership Status</th>
+                  <th class="col-att">Today's Status</th>
+                  <th class="col-att">This Month</th>
+                  <th class="col-att">Current Streak</th>
+                  <th class="col-att">Total Visits &amp; Last Check-In</th>
+                  <th class="col-staff">Staff Column (Coach)</th>
+                  <th class="col-owner">Owner Column</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filtered.map(({ m, i, a }) => `
+                  <tr>
+                    <td class="col-idcard">
+                      <b>#${esc(m.bio)}</b>
+                      <button class="g sm" style="margin-left:6px" onclick="previewIdCardModal('${esc(m.id)}')"><i class="fa-solid fa-id-card"></i></button>
+                    </td>
+                    <td>
+                      <b>${esc(m.name)}</b>
+                      <div class="msg" style="margin:0">${esc(m.phone)}</div>
+                    </td>
+                    <td><span class="pill" style="background:${i.st[1]}">${i.st[0]} (${i.left}d)</span></td>
+                    <td class="col-att">
+                      ${a.today
+                        ? `<span class="pill" style="background:#12a150"><i class="fa-solid fa-check"></i> PRESENT TODAY</span>`
+                        : `<span class="pill" style="background:#64748b">Not Marked</span>`
+                      }
+                    </td>
+                    <td class="col-att"><b>${a.month}</b> days</td>
+                    <td class="col-att"><b>${a.streak}</b> day streak 🔥</td>
+                    <td class="col-att">
+                      <b>${a.total}</b> total
+                      <div class="msg" style="margin:0">${a.last ? fmtA(a.last).join(" · ") : "Never"}</div>
+                    </td>
+                    <td class="col-staff">${esc(m.staff || "Staff")}</td>
+                    <td class="col-owner"><span style="font-size:12px;font-weight:700;color:var(--purple)">${esc(m.ownerStatus || "Verified ✔")}</span></td>
+                    <td>
+                      ${a.today
+                        ? `<button class="g sm" onclick="unmarkMemberAttendanceToday('${esc(m.id)}')">Undo</button>`
+                        : `<button class="sm" style="background:#12a150" onclick="markMemberAttendance('${esc(m.id)}', '${esc(role === 'owner' ? 'Owner' : activeStaffName)}')">✔ Mark Present</button>`
+                      }
+                    </td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    /* ============================================================================
+       11. SALES, EXPENSES, PACKAGES, INVOICES & STAFF/OWNER VIEWS
+       ============================================================================ */
+    function viewSales() {
+      const r = rng();
+      const S = C.sales
+        .filter(x => inR(x, r))
+        .sort((a, b) => b.date.localeCompare(a.date) || String(b.inv).localeCompare(String(a.inv)));
+      const md = grp(S, "mode");
+      const g = m => (md.find(x => x[0] === m) || [0, 0])[1];
+
+      return `
+        ${rb()}
+        ${kg([
+          kc("Total Sales (Selected Period)", inr(sum(S)), `${S.length} invoices`, "#d9202e, #990f19"),
+          kc("UPI / Online", inr(g("UPI")), "Bank Verified", "#7c3aed, #4c1d95"),
+          kc("Cash Collected", inr(g("Cash")), "Counter Drawer", "#0f9d58, #065f46"),
+          kc("Card POS", inr(g("Card")), "Terminal", "#2563eb, #1e40af")
+        ])}
+
+        <div class="box" style="margin-top:12px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+            <button onclick="saleInvoice()"><i class="fa-solid fa-plus"></i> + New Sale / Generate Invoice</button>
+            <button class="g" onclick="importMemberBills()"><i class="fa-solid fa-file-import"></i> Sync Member Bills</button>
+            <input data-fs placeholder="🔍 Search invoice, customer, package, Staff or Owner status..." style="flex:1;min-width:220px">
+          </div>
+
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Invoice</th>
+                  <th>Customer &amp; BIO ID</th>
+                  <th>Package / Item</th>
+                  <th>Mode</th>
+                  <th>Paid Amount</th>
+                  <th>Due</th>
+                  <th class="col-staff"><i class="fa-solid fa-user-tie"></i> Staff Column</th>
+                  <th class="col-owner"><i class="fa-solid fa-crown"></i> Owner Column</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${S.map(x => `
+                  <tr data-s="${esc([x.customer, x.item, x.inv, x.mode, x.staff, x.ownerStatus].join(" ").toLowerCase())}">
+                    <td>${esc(x.date)}</td>
+                    <td><b>${esc(x.inv)}</b></td>
+                    <td>
+                      <b>${esc(x.customer)}</b>
+                      <div class="msg" style="margin:0">BIO #${esc(x.bio || "-")} · ${esc(x.phone || "")}</div>
+                    </td>
+                    <td>${esc(x.item)}</td>
+                    <td><span class="chip" style="padding:2px 9px;font-size:11px">${esc(x.mode)}</span></td>
+                    <td style="color:var(--ok);font-weight:800">${inr(x.amount)}</td>
+                    <td>${+x.due ? `<span style="color:var(--red);font-weight:700">${inr(x.due)}</span>` : "–"}</td>
+                    <td class="col-staff">
+                      <select style="padding:4px 8px;font-size:12px;width:135px" onchange="updateSaleField('${esc(x.id)}','staff',this.value)">
+                        ${allStaffNames().map(st => `<option ${(x.staff || "Owner Direct") === st ? "selected" : ""}>${esc(st)}</option>`).join("")}
+                      </select>
+                    </td>
+                    <td class="col-owner">
+                      <select style="padding:4px 8px;font-size:12px;width:140px;font-weight:700;color:var(--purple)" ${role !== "owner" ? "disabled" : ""} onchange="updateSaleField('${esc(x.id)}','ownerStatus',this.value)">
+                        ${OWNER_STATUSES.map(st => `<option ${(x.ownerStatus || "Verified ✔") === st ? "selected" : ""}>${esc(st)}</option>`).join("")}
+                      </select>
+                    </td>
+                    <td>
+                      <div style="display:flex;gap:4px">
+                        <button class="g sm" onclick="invoice(C.sales.find(s=>s.id==='${esc(x.id)}'))" title="Download Official PDF Invoice"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                        ${role === "owner" ? `<button class="g sm" onclick="rm('sales','${esc(x.id)}')">✕</button>` : ""}
+                      </div>
+                    </td>
+                  </tr>
+                `).join("") || `<tr><td colspan="10" class="msg" style="text-align:center;padding:20px">No sales in this date range.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateSaleField(saleId, field, val) {
+      const s = C.sales.find(x => x.id === saleId);
+      if (!s) return;
+      s[field] = val;
+      saveLocalState();
+      toast(`Updated sale ${s.inv} ${field} to "${val}"`, "ok");
+    }
+
+    function updateExpenseField(expId, field, val) {
+      const e = C.expenses.find(x => x.id === expId);
+      if (!e) return;
+      e[field] = val;
+      saveLocalState();
+      toast(`Updated expense ${field} to "${val}"`, "ok");
+    }
+
+    function viewExpenses() {
+      const r = rng();
+      const E = C.expenses.filter(x => inR(x, r)).sort((a, b) => b.date.localeCompare(a.date));
+      const cat = grp(E, "category");
+      const top = cat[0];
+
+      return `
+        ${rb()}
+        ${kg([
+          kc("Total Expenses", inr(sum(E)), `${E.length} entries`, "#475569, #1e293b"),
+          kc("Largest Expense Head", top ? esc(top[0]) : "–", top ? inr(top[1]) : "", "#d98a00, #92400e"),
+          kc("Daily Expense Burn", inr(sum(E) / daysIn(r)), `${daysIn(r)} days in period`, "#7c3aed, #4c1d95")
+        ])}
+
+        ${cd("🧾 Expense Distribution by Category", dnBlock(cat))}
+
+        <div class="box" style="margin-top:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+            <b>Expense Voucher Ledger (with Staff Logged &amp; Owner Approval Columns)</b>
+            <button onclick="openNewExpenseModal()"><i class="fa-solid fa-plus"></i> + Record Expense</button>
+          </div>
+
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Category</th>
+                  <th>Description / Note</th>
+                  <th>Paid Mode</th>
+                  <th>Amount</th>
+                  <th class="col-staff"><i class="fa-solid fa-user-tie"></i> Staff Column (Logged By)</th>
+                  <th class="col-owner"><i class="fa-solid fa-crown"></i> Owner Column (Approval)</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${E.map(x => `
+                  <tr>
+                    <td>${esc(x.date)}</td>
+                    <td><b>${esc(x.category)}</b></td>
+                    <td>${esc(x.note || "–")}</td>
+                    <td>${esc(x.mode)}</td>
+                    <td style="color:#f87171;font-weight:800">${inr(x.amount)}</td>
+                    <td class="col-staff">
+                      <select style="padding:4px 8px;font-size:12px;width:135px" onchange="updateExpenseField('${esc(x.id)}','staff',this.value)">
+                        ${allStaffNames().map(st => `<option ${(x.staff || "Owner Direct") === st ? "selected" : ""}>${esc(st)}</option>`).join("")}
+                      </select>
+                    </td>
+                    <td class="col-owner">
+                      <select style="padding:4px 8px;font-size:12px;width:140px;font-weight:700;color:var(--purple)" ${role !== "owner" ? "disabled" : ""} onchange="updateExpenseField('${esc(x.id)}','ownerStatus',this.value)">
+                        ${OWNER_STATUSES.map(st => `<option ${(x.ownerStatus || "Verified ✔") === st ? "selected" : ""}>${esc(st)}</option>`).join("")}
+                      </select>
+                    </td>
+                    <td>
+                      ${role === "owner" ? `<button class="g sm" onclick="rm('expenses','${esc(x.id)}')">✕</button>` : ""}
+                    </td>
+                  </tr>
+                `).join("") || `<tr><td colspan="8" class="msg" style="text-align:center;padding:20px">No expenses recorded in this period.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function viewPackages() {
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <div>
+            <h2 style="margin:0;font-size:18px;font-weight:800">📦 Gym Membership &amp; Personal Training Packages (${allPk().length})</h2>
+            <p class="msg" style="margin:2px 0 0">Click "Sell &amp; Invoice" on any package to auto-populate duration, pricing, and PDF invoice</p>
+          </div>
+          <button onclick="openPackageModal()"><i class="fa-solid fa-plus"></i> + Create Custom Package</button>
+        </div>
+
+        <div class="pcg">
+          ${allPk().map(p => {
+            const s = C.sales.filter(x => x.item === p.name);
+            const own = !PKO.some(b => b.id === p.id);
+            return `
+              <div class="pcd">
+                <div>
+                  <div style="display:flex;justify-content:space-between;gap:6px;align-items:flex-start">
+                    <b style="font-size:14.5px;line-height:1.3">${esc(p.name)}</b>
+                    <span class="chip" style="padding:2px 8px;font-size:11px;flex:none">${esc(p.type)}</span>
+                  </div>
+                  <div style="font-size:26px;font-weight:900;color:var(--red);margin:6px 0 2px">${inr(p.price)}</div>
+                  <div class="msg" style="margin:0"><i class="fa-regular fa-clock"></i> Validity: <b>${p.days} days</b>${p.note ? " · " + esc(p.note) : ""}</div>
+                </div>
+                <div>
+                  <div style="padding:8px 10px;background:var(--card-alt);border-radius:10px;font-size:12px;margin:8px 0;display:flex;justify-content:space-between">
+                    <span>Sold: <b>${s.length}</b></span>
+                    <span>Revenue: <b style="color:var(--ok)">${inr(sum(s))}</b></span>
+                  </div>
+                  <div style="display:flex;gap:6px">
+                    <button class="sm" style="flex:1" onclick="saleInvoice({pkg:'${esc(p.name)}'})"><i class="fa-solid fa-file-invoice-dollar"></i> Sell &amp; Invoice</button>
+                    ${own ? `
+                      <button class="g sm" onclick="openPackageModal('${esc(p.id)}')"><i class="fa-solid fa-pen"></i></button>
+                      <button class="g sm" onclick="rm('packages','${esc(p.id)}')">✕</button>
+                    ` : ""}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function viewInvoicesAndExpiries() {
+      const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+      const ym = todayS().slice(0, 7);
+      const L = members.map(m => {
+        const e = pd(m.end);
+        return { m, e, dt: e ? Math.round((e - t0) / 864e5) : 0 };
+      }).filter(x => x.e);
+
+      const F = {
+        exp: ["Expired", x => x.dt < 0],
+        today: ["Expires Today", x => x.dt === 0],
+        "7": ["Next 7 Days", x => x.dt >= 0 && x.dt <= 7],
+        "30": ["Next 30 Days", x => x.dt >= 0 && x.dt <= 30],
+        month: ["This Month", x => iso(x.e).slice(0, 7) === ym]
+      };
+      const rows = L.filter(F[EX][1]).sort((a, b) => EX === "exp" ? b.e - a.e : a.e - b.e);
+      const S = C.sales.slice().sort((a, b) => b.date.localeCompare(a.date) || String(b.inv).localeCompare(String(a.inv)));
+
+      return `
+        <div class="box" style="margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+            <b>⏳ Upcoming Renewals &amp; Expiry Follow-up Center</b>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              ${Object.entries(F).map(([k, [l, fn]]) => `
+                <button class="${EX === k ? "" : "g"} sm" onclick="EX='${k}';render()" style="border-radius:99px">${l} (${L.filter(fn).length})</button>
+              `).join("")}
+            </div>
+          </div>
+
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Member &amp; BIO</th>
+                  <th>Phone</th>
+                  <th>Package</th>
+                  <th>Expiry Date</th>
+                  <th>Status</th>
+                  <th>Balance Due</th>
+                  <th class="col-staff">Staff Assigned</th>
+                  <th>Quick Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows.map(({ m, e, dt }) => {
+                  const ph = String(m.phone).replace(/\D/g, "").slice(-10);
+                  const msg = encodeURIComponent(`Hi ${m.name}, your Red Cross Gym membership ${dt < 0 ? "expired on " : "ends on "}${fmt(e)}. Please renew to continue your fitness journey!`);
+                  return `<tr>
+                    <td><b>${esc(m.name)}</b> <span class="msg">#${esc(m.bio)}</span></td>
+                    <td>${esc(m.phone)}</td>
+                    <td>${esc(m.plan)}</td>
+                    <td>${fmt(e)}</td>
+                    <td><span style="color:${dt < 0 ? "#c0262d" : dt <= 7 ? "#d98a00" : "#12a150"};font-weight:700">${dt < 0 ? "Expired " + (-dt) + "d ago" : dt === 0 ? "Expires Today" : "In " + dt + " days"}</span></td>
+                    <td>${+m.due ? `<b style="color:var(--red)">${inr(m.due)}</b>` : "–"}</td>
+                    <td class="col-staff">${esc(m.staff || "Staff")}</td>
+                    <td>
+                      <div style="display:flex;gap:6px;align-items:center">
+                        <button class="sm" onclick="saleInvoice({member:members.find(x=>x.id==='${esc(m.id)}'),renew:true,pkg:'${esc(m.plan)}'})">Renew</button>
+                        <a class="btn g sm" href="https://wa.me/91${ph}?text=${msg}" target="_blank" rel="noopener" style="color:#12a150"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+                      </div>
+                    </td>
+                  </tr>`;
+                }).join("") || `<tr><td colspan="8" class="msg" style="text-align:center;padding:16px">No expiries in this filter.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+            <b>📄 Official Tax / Membership Invoices Register (${S.length})</b>
+            <div style="display:flex;gap:8px">
+              <input data-fs placeholder="🔍 Search invoice RCG-xxxx, customer, or item..." style="width:260px">
+              <button onclick="saleInvoice()"><i class="fa-solid fa-file-circle-plus"></i> + Generate New Invoice</button>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Invoice No</th>
+                  <th>Date</th>
+                  <th>Customer &amp; BIO ID</th>
+                  <th>Package</th>
+                  <th>Grand Total</th>
+                  <th>Paid</th>
+                  <th>Due</th>
+                  <th class="col-staff">Staff Column</th>
+                  <th class="col-owner">Owner Column</th>
+                  <th>Download PDF</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${S.map(x => `
+                  <tr data-s="${esc([x.inv, x.customer, x.item, x.staff, x.ownerStatus].join(" ").toLowerCase())}">
+                    <td><b style="color:var(--red)">${esc(x.inv)}</b></td>
+                    <td>${esc(x.date)}</td>
+                    <td><b>${esc(x.customer)}</b> <span class="msg">#${esc(x.bio || "-")}</span></td>
+                    <td>${esc(x.item)}</td>
+                    <td><b>${inr((+x.amount || 0) + (+x.due || 0))}</b></td>
+                    <td style="color:var(--ok);font-weight:700">${inr(x.amount)}</td>
+                    <td>${+x.due ? `<b style="color:var(--red)">${inr(x.due)}</b>` : "₹0"}</td>
+                    <td class="col-staff">${esc(x.staff || "Owner Direct")}</td>
+                    <td class="col-owner"><b style="color:var(--purple)">${esc(x.ownerStatus || "Verified ✔")}</b></td>
+                    <td>
+                      <button class="sm" onclick="invoice(C.sales.find(s=>s.id==='${esc(x.id)}'))"><i class="fa-solid fa-download"></i> Invoice PDF</button>
+                    </td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // View 6: Dedicated Staff Management & Owner Controls View
+    function viewStaffAndOwner() {
+      const staffList = C.staff || [];
+      const totalPayroll = sum(staffList, "salary");
+      const ownerDirectSales = sum(C.sales.filter(x => (x.staff || "Owner Direct") === "Owner Direct"));
+      const staffHandledSales = sum(C.sales.filter(x => (x.staff || "Owner Direct") !== "Owner Direct"));
+      const pendingOwnerAudit = C.sales.filter(x => x.ownerStatus === "Pending Review").length;
+
+      return `
+        ${kg([
+          kc("Gym Staff & Trainers", `${staffList.length} Team Members`, `${staffList.filter(s => s.presentToday).length} Present Today`, "#2563eb, #1e40af"),
+          kc("Monthly Staff Payroll", inr(totalPayroll), "Base fixed salaries", "#475569, #1e293b"),
+          kc("Staff-Driven Revenue", inr(staffHandledSales), "Closed by Trainers / Front Desk", "#0f9d58, #065f46"),
+          kc("Owner Direct & Settled", inr(ownerDirectSales), `${pendingOwnerAudit} sales pending Owner review`, "#7c3aed, #4c1d95")
+        ])}
+
+        <div class="box" style="margin-top:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+            <div>
+              <h3 style="margin:0;font-size:17px;font-weight:800"><i class="fa-solid fa-user-tie" style="color:var(--blue)"></i> Staff &amp; Trainer Directory, Attendance &amp; Commission Tracker</h3>
+              <p class="msg" style="margin:2px 0 0">Manage staff attendance, assigned members, sales performance, and 1-click salary disbursement</p>
+            </div>
+            ${role === "owner" ? `<button onclick="openStaffModal()"><i class="fa-solid fa-user-plus"></i> + Add Staff / Trainer</button>` : ""}
+          </div>
+
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="col-staff">Staff Name &amp; Role</th>
+                  <th>Phone &amp; Joined</th>
+                  <th>Today's Attendance</th>
+                  <th>Assigned Members</th>
+                  <th>Sales Closed</th>
+                  <th>Revenue Generated</th>
+                  <th>Monthly Salary &amp; Comm %</th>
+                  <th class="col-owner">Owner Column (Notes &amp; Payroll)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${staffList.map(st => {
+                  const stSales = C.sales.filter(x => x.staff === st.name);
+                  const stRev = sum(stSales);
+                  const assignedMems = members.filter(m => m.staff === st.name).length;
+                  const estComm = Math.round((stRev * (+st.comm || 0)) / 100);
+                  return `<tr>
+                    <td class="col-staff">
+                      <b style="font-size:14px">${esc(st.name)}</b>
+                      <div class="msg" style="margin:0">${esc(st.role)}</div>
+                    </td>
+                    <td>
+                      <div>${esc(st.phone)}</div>
+                      <div class="msg" style="margin:0">Joined: ${esc(st.joined)}</div>
+                    </td>
+                    <td>
+                      <button class="${st.presentToday ? '' : 'g'} sm" style="${st.presentToday ? 'background:#12a150' : ''}" onclick="toggleStaffAttendance('${esc(st.id)}')">
+                        ${st.presentToday ? "✔ Present Today" : "Mark Present"}
+                      </button>
+                    </td>
+                    <td><b>${assignedMems}</b> members</td>
+                    <td><b>${stSales.length}</b> invoices</td>
+                    <td style="color:var(--ok);font-weight:800">${inr(stRev)}</td>
+                    <td>
+                      <b>${inr(st.salary)}</b>/mo
+                      <div class="msg" style="margin:0">${st.comm}% comm (~${inr(estComm)})</div>
+                    </td>
+                    <td class="col-owner">
+                      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                        <span style="font-size:12px;color:var(--mut)">${esc(st.ownerNote || "")}</span>
+                        ${role === "owner" ? `
+                          <button class="sm" style="background:var(--purple)" onclick="payStaffSalary('${esc(st.id)}')"><i class="fa-solid fa-money-bill-transfer"></i> Pay Salary</button>
+                          <button class="g sm" onclick="openStaffModal('${esc(st.id)}')"><i class="fa-solid fa-pen"></i></button>
+                        ` : ""}
+                      </div>
+                    </td>
+                  </tr>`;
+                }).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="box" style="margin-top:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+            <div>
+              <h3 style="margin:0;font-size:17px;font-weight:800"><i class="fa-solid fa-crown" style="color:var(--purple)"></i> Owner Audit &amp; Settlement Control Center</h3>
+              <p class="msg" style="margin:2px 0 0">Review transactions handled by staff and mark cash/UPI collections as Settled to Owner</p>
+            </div>
+            ${role === "owner" ? `<button class="sm" style="background:var(--purple)" onclick="settleAllPendingToOwner()"><i class="fa-solid fa-check-double"></i> Mark All Pending Sales as Settled to Owner</button>` : ""}
+          </div>
+
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date &amp; Invoice</th>
+                  <th>Customer</th>
+                  <th>Mode</th>
+                  <th>Amount</th>
+                  <th class="col-staff">Staff Handled By</th>
+                  <th class="col-owner">Owner Verification Status</th>
+                  <th class="col-owner">Owner Remark</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${C.sales.slice().sort((a, b) => b.date.localeCompare(a.date)).map(s => `
+                  <tr>
+                    <td><b>${esc(s.inv)}</b> · ${esc(s.date)}</td>
+                    <td>${esc(s.customer)}</td>
+                    <td>${esc(s.mode)}</td>
+                    <td><b>${inr(s.amount)}</b></td>
+                    <td class="col-staff">${esc(s.staff || "Owner Direct")}</td>
+                    <td class="col-owner">
+                      <select style="padding:4px 8px;font-size:12px;width:150px;font-weight:700;color:var(--purple)" ${role !== "owner" ? "disabled" : ""} onchange="updateSaleField('${esc(s.id)}','ownerStatus',this.value);render()">
+                        ${OWNER_STATUSES.map(st => `<option ${(s.ownerStatus || "Verified ✔") === st ? "selected" : ""}>${esc(st)}</option>`).join("")}
+                      </select>
+                    </td>
+                    <td class="col-owner">
+                      <input value="${esc(s.ownerNote || "")}" placeholder="Add owner remark..." style="padding:4px 8px;font-size:12px" ${role !== "owner" ? "readonly" : ""} onchange="updateSaleField('${esc(s.id)}','ownerNote',this.value)">
+                    </td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleStaffAttendance(stId) {
+      const st = (C.staff || []).find(x => x.id === stId);
+      if (!st) return;
+      st.presentToday = !st.presentToday;
+      saveLocalState();
+      toast(`${st.name} marked ${st.presentToday ? "Present ✔" : "Absent"}`, "ok");
+      render();
+    }
+
+    function payStaffSalary(stId) {
+      const st = (C.staff || []).find(x => x.id === stId);
+      if (!st) return;
+      askConfirm("Disburse Staff Salary", `Record salary payment of ${inr(st.salary)} to ${st.name} (${st.role}) in Expenses?`, async () => {
+        await cputs("expenses", [{
+          date: todayS(),
+          category: "Salary",
+          amount: +st.salary,
+          mode: "UPI",
+          staff: st.name,
+          ownerStatus: "Settled to Owner",
+          note: `Monthly Salary Paid to ${st.name} (${st.role})`
+        }]);
+        toast(`Salary of ${inr(st.salary)} logged for ${st.name} ✔`, "ok");
+        render();
+      }, "Pay & Log Expense");
+    }
+
+    function settleAllPendingToOwner() {
+      if (role !== "owner") return;
+      let count = 0;
+      C.sales.forEach(s => {
+        if (s.ownerStatus !== "Settled to Owner") {
+          s.ownerStatus = "Settled to Owner";
+          count++;
+        }
+      });
+      saveLocalState();
+      toast(`${count} sales marked as Settled to Owner ✔`, "ok");
+      render();
+    }
+
+    /* ============================================================================
+       12. MODALS: SALE/INVOICE GENERATOR, ADD/RENEW MEMBER, EXPENSE, STAFF
+       ============================================================================ */
+    function saleInvoice(o = {}) {
+      const pk = allPk();
+      const M0 = o.member;
+      const d = modal(`
+        <h3 style="margin:0 0 4px;font-size:18px;font-weight:800">${o.renew ? "🔄 Renew Membership &amp; Generate Invoice" : "🧾 New Sale &amp; Official PDF Invoice"}</h3>
+        <div class="two-col" style="grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label>Select Existing Member (or Walk-in)</label>
+            <select id="cu">
+              <option value="">Walk-in / New Customer</option>
+              ${members.map(m => `<option value="${esc(m.id)}"${M0 && M0.id === m.id ? " selected" : ""}>${esc(m.name)} (#${esc(m.bio)})</option>`).join("")}
+            </select>
+          </div>
+          <div>
+            <label>BIO ID (Unique 5 digits)</label>
+            <input id="bo" inputmode="numeric">
+          </div>
+        </div>
+
+        <div class="two-col" style="grid-template-columns:1fr 1fr;gap:10px">
+          <div><label>Customer Name</label><input id="nm" placeholder="Full Name"></div>
+          <div><label>Phone Number</label><input id="ph" type="tel" placeholder="10-digit mobile"></div>
+        </div>
+
+        <label>Select Gym / PT Package</label>
+        <select id="pk">
+          <option>Custom</option>
+          ${pk.map(p => `<option${o.pkg === p.name ? " selected" : ""}>${esc(p.name)}</option>`).join("")}
+        </select>
+        <label>Custom Plan Description</label>
+        <input id="pn" placeholder="e.g. 12 Months Gym Membership">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div><label>Start Date 📅</label><input type="date" id="jd" value="${todayS()}"></div>
+          <div><label>Duration (Days)</label><input type="number" id="dy" min="1" value="30"></div>
+          <div><label>End Date 📅</label><input type="date" id="ed"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
+          <div><label>Price (₹)</label><input type="number" id="pr" min="0" value="2000"></div>
+          <div><label>Discount (₹ or %)</label><input id="dc" placeholder="0 or 10%"></div>
+          <div><label>Reg. Fee (₹)</label><input type="number" id="rf" value="0" min="0"></div>
+          <div><label>Paid Now (₹)</label><input type="number" id="pa" min="0" placeholder="Full"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div>
+            <label>Payment Mode</label>
+            <select id="md"><option>UPI</option><option>Cash</option><option>Card</option></select>
+          </div>
+          <div>
+            <label>Staff Column (Handled By)</label>
+            <select id="stf">
+              ${allStaffNames().map(s => `<option ${s === (role === "staff" ? activeStaffName.split(" (")[0] : "Owner Direct") ? "selected" : ""}>${esc(s)}</option>`).join("")}
+            </select>
+          </div>
+          <div>
+            <label>Owner Column Status</label>
+            <select id="own" ${role !== "owner" ? "disabled" : ""}>
+              ${OWNER_STATUSES.map(st => `<option>${esc(st)}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+
+        <label style="display:flex;align-items:center;gap:8px;margin-top:12px;color:var(--tx);cursor:pointer">
+          <input type="checkbox" id="rn" style="width:auto" checked>
+          <span>Create / Update Member ID Card &amp; Validity Dates automatically</span>
+        </label>
+
+        <div id="sum" class="box" style="margin-top:10px;background:var(--card-alt);font-size:13px;line-height:1.7"></div>
+        <div class="msg err" id="fe"></div>
+
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button style="flex:1" id="sv"><i class="fa-solid fa-file-arrow-down"></i> Save Sale &amp; Download PDF Invoice</button>
+          <button class="g" id="cl">Cancel</button>
+        </div>
+      `, "620px");
+
+      const qEl = id => d.querySelector("#" + id);
+      const mem = () => members.find(x => x.id === qEl("cu").value);
+
+      const calc = () => {
+        const price = +qEl("pr").value || 0, rf = +qEl("rf").value || 0, ds = qEl("dc").value.trim();
+        let dc = ds.endsWith("%") ? (price * (parseFloat(ds) || 0)) / 100 : (+ds || 0);
+        dc = Math.round(Math.min(Math.max(dc, 0), price) * 100) / 100;
+        const grand = Math.max(0, price - dc + rf);
+        const paid = qEl("pa").value === "" ? grand : +qEl("pa").value;
+        const due = Math.max(0, Math.round((grand - paid) * 100) / 100);
+        qEl("sum").innerHTML = `Sub-total: <b>${R2(price)}</b> · Discount: <b>${R2(dc)}</b> · Reg. Fee: <b>${R2(rf)}</b><br>
+          Grand Total: <b style="color:var(--red)">${R2(grand)}</b> · Paid: <b style="color:var(--ok)">${R2(paid)}</b> · Balance Due: <b>${R2(due)}</b><br>
+          Validity: <b>${qEl("jd").value ? dm(qEl("jd").value) : "-"}</b> to <b>${qEl("ed").value ? dm(qEl("ed").value) : "-"}</b>`;
+        return { price, dc, rf, grand, paid, due };
+      };
+
+      const setEnd = () => {
+        if (qEl("jd").value && qEl("dy").value !== "") qEl("ed").value = addD(qEl("jd").value, +qEl("dy").value);
+        calc();
+      };
+
+      const fillMem = () => {
+        const m = mem();
+        qEl("bo").value = m ? m.bio : newBio();
+        qEl("bo").readOnly = !!m;
+        if (m) {
+          qEl("nm").value = m.name;
+          qEl("ph").value = m.phone;
+          if (m.staff) qEl("stf").value = m.staff;
+        }
+      };
+
+      qEl("cu").onchange = () => { fillMem(); calc(); };
+      qEl("pk").onchange = () => {
+        const p = allPk().find(x => x.name === qEl("pk").value);
+        if (p) {
+          qEl("pn").value = p.name;
+          qEl("pr").value = p.price;
+          qEl("dy").value = p.days;
+        }
+        setEnd();
+      };
+      qEl("jd").onchange = setEnd;
+      qEl("dy").oninput = setEnd;
+      qEl("ed").onchange = () => {
+        if (qEl("jd").value && qEl("ed").value) qEl("dy").value = difD(qEl("jd").value, qEl("ed").value);
+        calc();
+      };
+      ["pr", "dc", "rf", "pa"].forEach(i => qEl(i).oninput = calc);
+      qEl("cl").onclick = () => d.remove();
+
+      fillMem();
+      if (M0 && o.renew) {
+        const e = pd(M0.end);
+        if (e && e >= new Date(new Date().toDateString())) qEl("jd").value = addD(iso(e), 1);
+      }
+      if (!o.pkg && pk[1]) qEl("pk").value = pk[1].name;
+      qEl("pk").onchange();
+
+      qEl("sv").onclick = async () => {
+        const c = calc(), m = mem();
+        const name = qEl("nm").value.trim();
+        const pn = qEl("pk").value === "Custom" ? (qEl("pn").value.trim() || "Gym Membership") : qEl("pk").value;
+        if (!name) { qEl("fe").textContent = "Please enter the customer name"; return; }
+        const bo = qEl("bo").value.trim();
+        if (!bo) { qEl("fe").textContent = "Please enter a valid BIO ID"; return; }
+        if (!qEl("jd").value || !qEl("ed").value || qEl("ed").value < qEl("jd").value) {
+          qEl("fe").textContent = "Please verify start and end dates"; return;
+        }
+
+        const bill = billNo();
+        const syncMem = qEl("rn").checked;
+        const mode = qEl("md").value;
+        const staffVal = qEl("stf").value;
+        const ownerVal = qEl("own").value;
+        const memId = m ? m.id : "m" + bo;
+
+        const sale = {
+          id: "inv" + Date.now().toString(36),
+          date: todayS(),
+          customer: name,
+          phone: qEl("ph").value.trim(),
+          memberId: memId,
+          bio: bo,
+          item: pn,
+          type: /personal training/i.test(pn) ? "PT" : "Membership",
+          amount: c.paid,
+          discount: c.dc,
+          due: c.due,
+          reg: c.rf,
+          price: c.price,
+          total: c.grand,
+          mode,
+          staff: staffVal,
+          ownerStatus: ownerVal,
+          ownerNote: m && o.renew ? "Membership Renewal" : "New Enrollment",
+          inv: "RCG-" + pad4(bill),
+          bill: String(bill),
+          start: dm(qEl("jd").value),
+          end: dm(qEl("ed").value),
+          rtype: m && o.renew ? "Renewal" : "Enrollment"
+        };
+
+        await cputs("sales", [sale]);
+
+        if (syncMem) {
+          const memberRecord = {
+            ...(m || {}),
+            id: memId,
+            bio: bo,
+            name,
+            phone: qEl("ph").value.trim(),
+            plan: pn,
+            start: sale.start,
+            end: sale.end,
+            bill: String(bill),
+            billDate: toGB(new Date()),
+            price: String(c.price),
+            disc: String(c.dc),
+            reg: String(c.rf),
+            total: String(c.grand),
+            paid: String(c.paid),
+            due: String(c.due),
+            mode: mode === "UPI" ? "Online" : mode,
+            staff: staffVal,
+            ownerStatus: ownerVal,
+            photo: (m && m.photo) ? m.photo : avatarUrl(name),
+            renewed: Date.now()
+          };
+          await store.set(memberRecord);
+        }
+
+        d.remove();
+        invoice(sale);
+        render();
+      };
+    }
+
+    function openNewExpenseModal() {
+      const d = modal(`
+        <h3 style="margin:0 0 8px;font-size:18px;font-weight:800">🧾 Record Business Expense</h3>
+        <div class="two-col" style="grid-template-columns:1fr 1fr;gap:10px">
+          <div><label>Date 📅</label><input type="date" id="ex-dt" value="${todayS()}"></div>
+          <div>
+            <label>Category</label>
+            <select id="ex-cat">${EXP_CATS.map(c => `<option>${esc(c)}</option>`).join("")}</select>
+          </div>
+        </div>
+        <div class="two-col" style="grid-template-columns:1fr 1fr;gap:10px">
+          <div><label>Amount (₹)</label><input type="number" id="ex-amt" min="1" placeholder="e.g. 2500"></div>
+          <div><label>Payment Mode</label><select id="ex-md">${MODES.map(m => `<option>${esc(m)}</option>`).join("")}</select></div>
+        </div>
+        <div class="two-col" style="grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label>Staff Column (Logged By)</label>
+            <select id="ex-stf">${allStaffNames().map(s => `<option>${esc(s)}</option>`).join("")}</select>
+          </div>
+          <div>
+            <label>Owner Approval Status</label>
+            <select id="ex-own" ${role !== "owner" ? "disabled" : ""}>${OWNER_STATUSES.map(s => `<option>${esc(s)}</option>`).join("")}</select>
+          </div>
+        </div>
+        <label>Description / Voucher Note</label>
+        <input id="ex-nt" placeholder="e.g. Monthly AC maintenance or supplement stock">
+        <div class="msg err" id="ex-err"></div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button style="flex:1" id="ex-sv">Save Expense</button>
+          <button class="g" id="ex-cl">Cancel</button>
+        </div>
+      `, "480px");
+
+      d.querySelector("#ex-cl").onclick = () => d.remove();
+      d.querySelector("#ex-sv").onclick = async () => {
+        const amt = +d.querySelector("#ex-amt").value;
+        if (!(amt > 0)) { d.querySelector("#ex-err").textContent = "Enter a valid amount"; return; }
+        await cputs("expenses", [{
+          date: d.querySelector("#ex-dt").value || todayS(),
+          category: d.querySelector("#ex-cat").value,
+          amount: amt,
+          mode: d.querySelector("#ex-md").value,
+          staff: d.querySelector("#ex-stf").value,
+          ownerStatus: d.querySelector("#ex-own").value,
+          note: d.querySelector("#ex-nt").value.trim()
+        }]);
+        d.remove();
+        toast("Expense voucher recorded ✔", "ok");
+        render();
+      };
+    }
+
+    function openPackageModal(editId) {
+      const existing = editId ? (C.packages || []).find(x => x.id === editId) : null;
+      const d = modal(`
+        <h3 style="margin:0 0 8px;font-size:18px;font-weight:800">${existing ? "✏️ Edit Package" : "📦 Create Custom Package"}</h3>
+        <label>Package Name</label>
+        <input id="pk-nm" value="${esc(existing ? existing.name : "")}" placeholder="e.g. M. 6 Months Couple Gym Plan">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div>
+            <label>Type</label>
+            <select id="pk-tp">
+              ${["Membership", "PT", "Other"].map(t => `<option ${existing && existing.type === t ? "selected" : ""}>${t}</option>`).join("")}
+            </select>
+          </div>
+          <div><label>Price (₹)</label><input type="number" id="pk-pr" value="${existing ? existing.price : 5000}"></div>
+          <div><label>Duration (Days)</label><input type="number" id="pk-dy" value="${existing ? existing.days : 180}"></div>
+        </div>
+        <label>Short Note (Optional)</label>
+        <input id="pk-nt" value="${esc(existing ? existing.note || "" : "")}" placeholder="Includes cardio + locker access">
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button style="flex:1" id="pk-sv">Save Package</button>
+          <button class="g" id="pk-cl">Cancel</button>
+        </div>
+      `, "460px");
+
+      d.querySelector("#pk-cl").onclick = () => d.remove();
+      d.querySelector("#pk-sv").onclick = async () => {
+        const name = d.querySelector("#pk-nm").value.trim();
+        if (!name) { toast("Enter package name", "err"); return; }
+        await cputs("packages", [{
+          ...(existing || {}),
+          name,
+          type: d.querySelector("#pk-tp").value,
+          price: +d.querySelector("#pk-pr").value || 0,
+          days: +d.querySelector("#pk-dy").value || 30,
+          note: d.querySelector("#pk-nt").value.trim()
+        }]);
+        d.remove();
+        toast("Package saved ✔", "ok");
+        render();
+      };
+    }
+
+    function openStaffModal(editId) {
+      const existing = editId ? (C.staff || []).find(x => x.id === editId) : null;
+      const d = modal(`
+        <h3 style="margin:0 0 8px;font-size:18px;font-weight:800">${existing ? "✏️ Edit Staff / Trainer" : "👔 Add Gym Staff / Trainer"}</h3>
+        <div class="two-col" style="grid-template-columns:1fr 1fr;gap:10px">
+          <div><label>Full Name</label><input id="st-nm" value="${esc(existing ? existing.name : "")}" placeholder="e.g. Sameer Khan"></div>
+          <div><label>Role / Designation</label><input id="st-rl" value="${esc(existing ? existing.role : "Personal Trainer")}"></div>
+        </div>
+        <div class="two-col" style="grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div><label>Phone</label><input id="st-ph" value="${esc(existing ? existing.phone : "")}"></div>
+          <div><label>Monthly Salary (₹)</label><input type="number" id="st-sal" value="${existing ? existing.salary : 18000}"></div>
+          <div><label>Sales Comm (%)</label><input type="number" id="st-cm" value="${existing ? existing.comm : 8}"></div>
+        </div>
+        <label>Owner Remark / Shift Note</label>
+        <input id="st-nt" value="${esc(existing ? existing.ownerNote || "" : "")}" placeholder="Morning 6AM - 2PM shift">
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button style="flex:1" id="st-sv">Save Staff Member</button>
+          <button class="g" id="st-cl">Cancel</button>
+        </div>
+      `, "480px");
+
+      d.querySelector("#st-cl").onclick = () => d.remove();
+      d.querySelector("#st-sv").onclick = async () => {
+        const name = d.querySelector("#st-nm").value.trim();
+        if (!name) { toast("Please enter staff name", "err"); return; }
+        await cputs("staff", [{
+          ...(existing || {}),
+          name,
+          role: d.querySelector("#st-rl").value.trim() || "Trainer",
+          phone: d.querySelector("#st-ph").value.trim(),
+          salary: +d.querySelector("#st-sal").value || 15000,
+          comm: +d.querySelector("#st-cm").value || 0,
+          joined: existing ? existing.joined : toGB(new Date()),
+          presentToday: existing ? existing.presentToday : true,
+          ownerNote: d.querySelector("#st-nt").value.trim()
+        }]);
+        d.remove();
+        toast(`Saved staff profile for ${name} ✔`, "ok");
+        render();
+      };
+    }
+
+    function importMemberBills() {
+      const have = new Set(C.sales.map(x => x.ref || x.bill));
+      const items = [];
+      members.forEach(m => {
+        const ref = "b" + m.id + "-" + m.bill;
+        const p = pd(m.billDate) || pd(m.start);
+        if (+m.paid > 0 && p && !have.has(ref) && !have.has(String(m.bill))) {
+          items.push({
+            date: iso(p),
+            customer: m.name,
+            phone: m.phone,
+            memberId: m.id,
+            bio: m.bio,
+            item: m.plan || "Membership",
+            type: "Membership",
+            amount: +m.paid,
+            discount: +m.disc || 0,
+            due: +m.due || 0,
+            mode: "UPI",
+            staff: m.staff || "Owner Direct",
+            ownerStatus: m.ownerStatus || "Verified ✔",
+            ref,
+            bill: String(m.bill || ""),
+            inv: m.bill ? "RCG-" + pad4(m.bill) : nextInv(items.length),
+            start: m.start,
+            end: m.end
+          });
+        }
+      });
+      if (items.length) {
+        cputs("sales", items).then(() => {
+          toast(`${items.length} member bills synced to Sales ledger ✔`, "ok");
+          render();
+        });
+      } else {
+        toast("All member bills are already synced in Sales!", "info");
+      }
+    }
+
+    /* ============================================================================
+       13. MEMBER DETAIL MODAL, PDF BILL PARSER (pdf.js) & ADD MEMBER FLOW
+       ============================================================================ */
+    function detail(id) {
+      const m = members.find(x => x.id === id);
+      if (!m) return;
+      const i = info(m);
+      const a = astats(attm[m.id] || []);
+      const d = modal(`
+        ${renderMemberCard(m, i)}
+        <div style="margin-top:12px;padding:12px;background:var(--card-alt);border-radius:12px;font-size:13px;line-height:1.8">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap">
+            <span>Bill No: <b>#${esc(m.bill)}</b> (${esc(m.billDate)})</span>
+            <span>Payment Mode: <b>${esc(m.mode || "Online")}</b></span>
+          </div>
+          <div>Total Fee: <b>Rs. ${esc(m.total)}</b> &nbsp;·&nbsp; Paid: <b style="color:var(--ok)">Rs. ${esc(m.paid)}</b> &nbsp;·&nbsp; Balance Due: <b style="color:${+m.due > 0 ? 'var(--red)' : 'var(--mut)'}">Rs. ${esc(m.due)}</b></div>
+          <div>Attendance: <b>${a.month}</b> days this month &nbsp;·&nbsp; <b>${a.total}</b> total &nbsp;·&nbsp; Streak: <b>${a.streak} 🔥</b></div>
+        </div>
+
+        <div class="two-col" style="grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <div>
+            <label>Staff Column (Trainer / Handled By)</label>
+            <select id="dt-staff">
+              ${allStaffNames().map(s => `<option ${m.staff === s ? "selected" : ""}>${esc(s)}</option>`).join("")}
+            </select>
+          </div>
+          <div>
+            <label>Owner Column (Verification Status)</label>
+            <select id="dt-owner" ${role !== "owner" ? "disabled" : ""}>
+              ${OWNER_STATUSES.map(st => `<option ${(m.ownerStatus || "Verified ✔") === st ? "selected" : ""}>${esc(st)}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+        <label>Owner / Management Note</label>
+        <input id="dt-note" value="${esc(m.ownerNote || "")}" placeholder="Add remark about member...">
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+          <button class="g" id="dt-close">Close</button>
+          <button style="background:#0891b2" id="dt-idpdf"><i class="fa-solid fa-id-card"></i> ID Card PDF</button>
+          <button style="background:#2563eb" id="dt-inv"><i class="fa-solid fa-file-invoice"></i> Invoice PDF</button>
+          <button style="background:#12a150" id="dt-rn"><i class="fa-solid fa-rotate"></i> Renew</button>
+          ${role === "owner" ? `<button style="background:#8a1018" id="dt-del"><i class="fa-solid fa-trash"></i></button>` : ""}
+        </div>
+      `, "520px");
+
+      d.querySelector(".id").onclick = null;
+      d.querySelector("#dt-close").onclick = () => {
+        m.staff = d.querySelector("#dt-staff").value;
+        if (role === "owner") m.ownerStatus = d.querySelector("#dt-owner").value;
+        m.ownerNote = d.querySelector("#dt-note").value.trim();
+        saveLocalState();
+        d.remove();
+        render();
+      };
+      d.querySelector("#dt-idpdf").onclick = () => downloadIdCardPdf(m);
+      d.querySelector("#dt-inv").onclick = () => receipt(rcFromMember(m));
+      d.querySelector("#dt-rn").onclick = () => {
+        d.remove();
+        saleInvoice({ member: m, renew: true, pkg: m.plan });
+      };
+      if (d.querySelector("#dt-del")) {
+        d.querySelector("#dt-del").onclick = () => {
+          d.remove();
+          askConfirm("Delete Member", `Delete ${m.name} (BIO #${m.bio}) permanently?`, async () => {
+            await store.del(m.id);
+            toast(`Deleted ${m.name}`, "info");
+          }, "Delete");
+        };
+      }
+    }
+
+    function parseRcg(kw, t) {
+      if (typeof kw === "string" && kw.indexOf("RCGDATA:") === 0) {
+        try {
+          const j = JSON.parse(decodeURIComponent(escape(atob(kw.slice(8)))));
+          return {
+            name: j.name || "", bio: String(j.bio || ""), phone: j.phone || "",
+            bill: String(j.bill || ""), billDate: j.billDate || "", plan: j.plan || "",
+            start: j.start || "", end: j.end || "", total: String(j.total ?? ""),
+            paid: String(j.paid ?? ""), due: String(j.due ?? ""),
+            _x: { price: String(j.price ?? ""), disc: String(j.disc ?? 0), reg: String(j.reg ?? 0), mode: j.mode || "Online" },
+            _src: "data"
+          };
+        } catch (e) {}
+      }
+      const L = t.split("\n").map(x => x.trim()).filter(Boolean), J = L.join(" ");
+      const g = (r, i) => (r.exec(J) || [])[i || 1] || "", D = "(\\d{1,2}\\/\\d{1,2}\\/\\d{4})";
+      const bi = L.findIndex(x => /^BILL(ED)? TO/i.test(x)), nm = bi >= 0 ? L[bi + 1] : "";
+      const pi = L.findIndex(x => /membership|personal training|trial/i.test(x) && !/non-|^\d+\.|must|required/i.test(x));
+      const money = (...ks) => {
+        for (const k of ks) {
+          const m = new RegExp(k + "\\s*(?:Rs\\.?|₹)\\s*([\\d,]+(?:\\.\\d+)?)", "i").exec(J);
+          if (m) return m[1].replace(/,/g, "");
+        }
+        return "";
+      };
+      const dr = new RegExp("(?:From|Valid from:?)\\s+" + D + "\\s+(?:till|to|Valid till:?)\\s+" + D, "i").exec(J) || [];
+      const bill = g(/(?:Bill Number|Bill No):?\s*(\d+)/i) || g(/Invoice No:?\s*RCG-0*(\d+)/i);
+      return {
+        name: nm, bio: g(/BIO ID:?\s*(\d+)/i), phone: g(/BIO ID:?\s*\d+\s+(?:Phone:?\s*)?(\d{10})/i),
+        bill, billDate: g(new RegExp("Bill Date:?\\s*" + D, "i")) || g(new RegExp("(?:Issued on|Date):?\\s*" + D, "i")),
+        plan: pi >= 0 ? L[pi] : "", start: dr[1] || "", end: dr[2] || "",
+        total: money("GRAND TOTAL"), paid: money("PAID AMOUNT", "Amount paid"), due: money("DUE AMOUNT", "BALANCE DUE"),
+        _x: { price: money("SUB-TOTAL"), disc: money("DISCOUNT") || "0", reg: money("REGISTRATION FEE") || "0", mode: "Online" },
+        _src: "text"
+      };
+    }
+
+    async function readPdf(file) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+      const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+      let t = "", kw = "";
+      try { const md = await pdf.getMetadata(); kw = (md.info && md.info.Keywords) || ""; } catch (e) {}
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const c = await (await pdf.getPage(p)).getTextContent();
+        t += c.items.map(x => x.str).join("\n") + "\n";
+      }
+      return parseRcg(kw, t);
+    }
+
+    function tinyPhoto(file) {
+      return new Promise((res, rej) => {
+        const im = new Image();
+        im.onload = () => {
+          const W = 160, H = 200, cv = document.createElement("canvas");
+          cv.width = W; cv.height = H;
+          const x = cv.getContext("2d");
+          const s = Math.max(W / im.width, H / im.height), w = im.width * s, h = im.height * s;
+          x.drawImage(im, (W - w) / 2, (H - h) / 2, w, h);
+          let q = 0.65, u = cv.toDataURL("image/jpeg", q);
+          while (u.length > 9000 && q > 0.25) { q -= 0.1; u = cv.toDataURL("image/jpeg", q); }
+          res(u);
+        };
+        im.onerror = rej;
+        im.src = URL.createObjectURL(file);
+      });
+    }
+
+    function addView() {
+      let data = { bio: newBio(), bill: String(billNo()), start: toGB(new Date()), end: toGB(new Date(Date.now() + 365 * 864e5)), billDate: toGB(new Date()), plan: "B. 12 Months Gym Membership", total: "7000", paid: "7000", due: "0" };
+      let photo = "";
+      const d = modal(`
+        <h3 style="margin:0 0 6px;font-size:18px;font-weight:800">👤 Enroll Member / Import PDF Invoice</h3>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <label style="margin:0;flex:1">Have an existing Red Cross Gym Bill (PDF)? Upload to auto-fill:</label>
+          <input type="file" id="f" accept="application/pdf" style="width:auto;font-size:12px;padding:6px">
+        </div>
+        <button type="button" class="g sm" id="nb" style="width:100%;margin-top:8px"><i class="fa-solid fa-calculator"></i> Or Use Package Calculator &amp; Invoice Builder</button>
+
+        <label>Member Photo (Optional – auto-avatar generated if skipped)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button type="button" class="g sm" style="flex:1" id="cb">📷 Camera</button>
+          <button type="button" class="g sm" style="flex:1" id="gb">🖼 Gallery</button>
+          <img id="pv" alt="" style="display:none;width:48px;height:60px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)">
+        </div>
+        <input type="file" id="ph" accept="image/*" hidden>
+        <input type="file" id="cam" accept="image/*" capture="environment" hidden>
+        <div class="msg" id="st"></div>
+        <div id="form"></div>
+      `, "560px");
+
+      const st = m => d.querySelector("#st").innerHTML = m;
+      const F = [
+        ["name", "Member Full Name"], ["bio", "BIO ID (5 digits)"], ["phone", "Phone (10 digits)"],
+        ["plan", "Package / Plan"], ["start", "Start Date (dd/mm/yyyy)"], ["end", "End Date (dd/mm/yyyy)"],
+        ["bill", "Bill No"], ["billDate", "Bill Date (dd/mm/yyyy)"],
+        ["total", "Grand Total (₹)"], ["paid", "Paid Amount (₹)"], ["due", "Balance Due (₹)"]
+      ];
+
+      const onPhoto = async e => {
+        const f = e.target.files[0];
+        if (f) {
+          try {
+            photo = await tinyPhoto(f);
+            const pv = d.querySelector("#pv");
+            pv.src = photo; pv.style.display = "block";
+            st("Photo ready ✔");
+          } catch (x) { st('<span class="err">Could not read photo</span>'); }
+        }
+      };
+      d.querySelector("#ph").onchange = onPhoto;
+      d.querySelector("#cam").onchange = onPhoto;
+      d.querySelector("#cb").onclick = () => d.querySelector("#cam").click();
+      d.querySelector("#gb").onclick = () => d.querySelector("#ph").click();
+      d.querySelector("#nb").onclick = () => { d.remove(); saleInvoice(); };
+
+      const draw = () => {
+        d.querySelector("#form").innerHTML = `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+            ${F.map(([k, l]) => `<div><label style="margin-top:4px">${l}</label><input data-k="${k}" value="${esc(data[k] || "")}"></div>`).join("")}
+            <div>
+              <label style="margin-top:4px">Staff Column (Assigned)</label>
+              <select id="ad-staff">${allStaffNames().map(s => `<option>${esc(s)}</option>`).join("")}</select>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <button style="flex:1" id="sv">Save Member &amp; Generate ID Card</button>
+            <button class="g" id="cl">Cancel</button>
+          </div>
+        `;
+        d.querySelector("#cl").onclick = () => d.remove();
+        d.querySelector("#sv").onclick = async () => {
+          const m = {};
+          d.querySelectorAll("[data-k]").forEach(i => m[i.dataset.k] = i.value.trim());
+          if (data._x) Object.assign(m, data._x);
+          if (!m.name || !pd(m.end)) {
+            st('<span class="err">Member Name and a valid End Date (dd/mm/yyyy) are required.</span>');
+            return;
+          }
+          m.id = "m" + (m.bio || Date.now());
+          m.photo = photo || avatarUrl(m.name);
+          m.staff = d.querySelector("#ad-staff").value;
+          m.ownerStatus = role === "owner" ? "Verified ✔" : "Pending Review";
+          m.added = Date.now();
+          await store.set(m);
+          if (+m.paid > 0) {
+            await cputs("sales", [{
+              id: "enr" + m.bio + "-" + m.bill,
+              date: todayS(),
+              customer: m.name,
+              phone: m.phone,
+              memberId: m.id,
+              bio: m.bio,
+              item: m.plan,
+              type: /personal training/i.test(m.plan) ? "PT" : "Membership",
+              amount: +m.paid,
+              discount: +m.disc || 0,
+              due: +m.due || 0,
+              mode: "UPI",
+              staff: m.staff,
+              ownerStatus: m.ownerStatus,
+              inv: "RCG-" + pad4(m.bill || billNo()),
+              bill: String(m.bill || billNo()),
+              start: m.start,
+              end: m.end
+            }]);
+          }
+          d.remove();
+          toast(`Enrolled ${m.name} (BIO #${m.bio}) ✔`, "ok");
+          render();
+        };
+      };
+
+      draw();
+      d.querySelector("#f").onchange = async e => {
+        const f = e.target.files[0];
+        if (!f) return;
+        st("Reading PDF bill...");
+        try {
+          data = await readPdf(f);
+          st("PDF Invoice parsed ✔ Verify details below and click Save.");
+        } catch (x) {
+          st('<span class="err">Could not auto-parse PDF — please fill details below.</span>');
+        }
+        draw();
+      };
+    }
+
+    /* ============================================================================
+       14. MEMBER SELF-SERVICE PORTAL (ID CARD + LIVE ATTENDANCE + INVOICE)
+       ============================================================================ */
+    function openMemberKioskMode() {
+      role = null;
+      creds = null;
+      loginMode = "member";
+      render();
+    }
+
+    function mcard(m) {
+      const i = info(m), c = i.st[1];
+      return `
+        <div class="id" style="cursor:default;max-width:520px;margin:14px auto;border:5px solid ${c};border-radius:22px;box-shadow:0 12px 34px rgba(0,0,0,0.25)">
+          <div class="top" style="font-size:14px;padding:10px 18px">
+            <span style="display:inline-flex;align-items:center;gap:8px"><img src="${RCG_LOGO_SRC}" alt="Red Cross Gym" style="height:24px;background:#fff;border-radius:5px;padding:1px 5px"> OFFICIAL ID</span>
+            <span>BIO #${esc(m.bio || m.id || "-")}</span>
+          </div>
+          <div style="text-align:center;padding:18px 16px 8px">
+            <img src="${esc(m.photo || avatarUrl(m.name))}" onerror="this.src='${avatarUrl(m.name)}'" alt="" style="width:140px;height:175px;margin:0 auto;object-fit:cover;border-radius:16px;background:var(--bd);border:3px solid ${c}">
+            <h1 style="margin:12px 0 6px;font-size:28px;font-weight:900;line-height:1.1">${esc(m.name)}</h1>
+            <p style="font-size:13px;color:var(--mut);margin-bottom:8px">${esc(m.plan || "Gym Membership")}${m.staff ? ` · Coach: <b>${esc(m.staff)}</b>` : ""}</p>
+            <span class="pill" style="background:${c};font-size:16px;padding:5px 22px">${i.st[0].toUpperCase()}</span>
+            <div style="margin-top:10px">
+              <b style="font-size:56px;line-height:1;color:${c};font-weight:900">${i.left}</b>
+              <div style="font-size:15px;font-weight:700;color:var(--mut)">days remaining</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 16px 16px;text-align:center">
+            <div style="background:var(--card-alt);border-radius:12px;padding:10px;border:1px solid var(--bd)">
+              <div class="msg" style="margin:0;font-size:11px;font-weight:700">JOINING DATE</div>
+              <b style="font-size:16px">${fmt(pd(m.start))}</b>
+            </div>
+            <div style="background:var(--card-alt);border-radius:12px;padding:10px;border:1px solid var(--bd)">
+              <div class="msg" style="margin:0;font-size:11px;font-weight:700">EXPIRY DATE</div>
+              <b style="font-size:16px">${fmt(pd(m.end))}</b>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function markFromMemberPortal(memberId, btn) {
+      if (btn) { btn.disabled = true; btn.textContent = "Marking attendance…"; }
+      const m = mmem.find(x => x.id === memberId) || members.find(x => x.id === memberId);
+      if (m) {
+        const st = info(m).st[0];
+        if (st === "Expired") { toast("Membership expired. Please renew at the gym desk.", "err"); render(); return; }
+        if (st === "Upcoming") { toast("Membership has not started yet.", "err"); render(); return; }
+      }
+      // Mark locally immediately
+      const now = new Date();
+      const pad = n => String(n).padStart(2, "0");
+      const stamp = `${iso(now)} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      const list = (attm[memberId] || (m && m.att) || []).slice();
+      if (!list.some(x => x.startsWith(iso(now)))) {
+        list.push(stamp);
+      }
+      attm[memberId] = list;
+      if (m) m.att = list;
+      ls.s("rcg_mcache", JSON.stringify(mmem));
+      saveLocalState();
+
+      // Sync to cloud in background if reachable
+      try {
+        const r = await api({ action: "attend", phone: mphone, id: memberId });
+        if (r && Array.isArray(r.att)) {
+          attm[memberId] = r.att;
+          if (m) m.att = r.att;
+          ls.s("rcg_mcache", JSON.stringify(mmem));
+          saveLocalState();
+        }
+      } catch (e) {}
+      toast("Attendance marked for today ✔", "ok");
+      render();
+    }
+
+    function matt(m) {
+      const list = (m.att || attm[m.id] || []).slice().sort().reverse();
+      const s = astats(list);
+      const st = info(m).st[0];
+      let top;
+      if (s.today) {
+        const f = fmtA(list[0]);
+        top = `<div style="background:#12a15020;border:2px solid #12a150;border-radius:14px;padding:14px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:#12a150">✔ Attendance Marked Today</div>
+          <div style="font-size:14px;margin-top:4px">${f[1]}, ${f[0]} · ${f[2]}</div>
+        </div>`;
+      } else if (st === "Expired" || st === "Upcoming") {
+        top = '<div class="msg" style="text-align:center;padding:10px">Attendance can be marked only while membership is Active.</div>';
+      } else {
+        top = `<button data-mk="${esc(m.id || "")}" style="width:100%;padding:16px;font-size:18px;background:#12a150"><i class="fa-solid fa-fingerprint"></i> ✔ Mark Today's Attendance</button>`;
+      }
+
+      const rows = list.slice(0, 15).map(x => {
+        const f = fmtA(x);
+        return `<tr><td>${f[0]}</td><td>${f[1]}</td><td>${f[2]}</td></tr>`;
+      }).join("");
+
+      return `
+        <div class="box" style="max-width:520px;margin:0 auto 18px">
+          ${top}
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="g sm" style="flex:1" onclick="downloadIdCardPdf(mmem.find(x=>x.id==='${esc(m.id)}')||members.find(x=>x.id==='${esc(m.id)}'))"><i class="fa-solid fa-id-card"></i> Download ID Card PDF</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0">
+            <div class="stat"><b>${s.month}</b><span>This Month</span></div>
+            <div class="stat"><b>${s.streak} 🔥</b><span>Day Streak</span></div>
+            <div class="stat"><b>${s.total}</b><span>Total Days</span></div>
+          </div>
+          ${rows ? `<table class="data-table"><thead><tr><th>DATE</th><th>DAY</th><th>TIME</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="msg" style="text-align:center">No attendance logs yet.</p>'}
+        </div>
+      `;
+    }
+
+    function memberView() {
+      app.innerHTML = `
+        <header class="app-header">
+          ${brandLogoHTML(36)}
+          <div style="display:flex;gap:6px;align-items:center;margin-left:auto;flex-wrap:wrap">
+            <span class="chip" style="border-color:var(--ok);color:var(--ok)"><i class="fa-solid fa-id-badge"></i> Member Portal (${esc(mphone || "")})</span>
+            <button class="g sm" onclick="syncFromCloud(true)"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+            <button class="g sm" onclick="toggleTheme()" title="Toggle Dark/Light Theme"><i class="fa-solid fa-circle-half-stroke"></i></button>
+            <button class="g sm" id="m-logout"><i class="fa-solid fa-right-from-bracket"></i> Log out</button>
+          </div>
+        </header>
+        <div class="w">
+          <div class="box" style="text-align:center;max-width:520px;margin:0 auto">
+            <div id="cdt" style="font-size:18px;font-weight:700"></div>
+            <div id="clk" style="font-size:44px;font-weight:900;color:var(--red);line-height:1.1;font-variant-numeric:tabular-nums"></div>
+          </div>
+          ${mmem.length ? mmem.map(m => mcard(m) + matt(m)).join("") : '<p class="msg" style="text-align:center;margin-top:20px">Loading your membership card…</p>'}
+          <p class="msg" style="text-align:center">Show this digital ID card at the gym entrance.</p>
+        </div>
+      `;
+      $$("[data-mk]").forEach(b => {
+        b.onclick = () => markFromMemberPortal(b.dataset.mk, b);
+      });
+      $("#m-logout").onclick = () => {
+        askConfirm("Log Out", "Log out of your Member Portal?", () => {
+          ls.s("rcg_member", "");
+          ls.s("rcg_mcache", "");
+          mphone = null;
+          mmem = [];
+          role = null;
+          render();
+        }, "Log out");
+      };
+      tick();
+    }
+
+    /* ============================================================================
+       15. REAL AUTHENTICATION LOGIN VIEW (EXACT MATCH WITH ORIGINAL SCRIPT)
+       ============================================================================ */
+    function loginView(msg = "") {
+      app.innerHTML = `
+        <div class="w" style="max-width:440px;margin:8vh auto">
+          <div class="box" style="padding:26px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+              ${brandLogoHTML(44)}
+              <button type="button" class="g sm" onclick="toggleTheme()" title="Switch Dark / Light Theme"><i class="fa-solid fa-circle-half-stroke"></i></button>
+            </div>
+
+            <!-- Portal Mode Tabs -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--card-alt);padding:5px;border-radius:12px;border:1px solid var(--bd);margin-bottom:18px">
+              <button type="button" class="${loginMode === 'staff' ? '' : 'g'} sm" style="padding:9px" onclick="loginMode='staff';loginView()">
+                <i class="fa-solid fa-user-shield"></i> Staff / Owner
+              </button>
+              <button type="button" class="${loginMode === 'member' ? '' : 'g'} sm" style="padding:9px" onclick="loginMode='member';loginView()">
+                <i class="fa-solid fa-id-card"></i> Member Login
+              </button>
+            </div>
+
+            ${loginMode === "staff" ? `
+              <form id="lf" novalidate>
+                <h2 style="margin:0 0 4px;font-size:18px;font-weight:800">Management Portal</h2>
+                <p class="msg" style="margin:0 0 12px">Sign in with the Login ID and Password for your Google Script</p>
+
+                <label>Login ID</label>
+                <input id="u" type="text" placeholder="Login ID (e.g. rcg or staff)" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" enterkeyhint="next" required>
+
+                <label>Password</label>
+                <input id="p" type="password" placeholder="Password" autocomplete="current-password" enterkeyhint="go" required>
+
+                <label style="display:flex;gap:8px;align-items:center;margin-top:10px;cursor:pointer;font-weight:500">
+                  <input type="checkbox" id="sp" style="width:auto"> Show password
+                </label>
+
+                <div class="msg err" id="lf-err">${esc(msg)}</div>
+                <button type="submit" style="width:100%;margin-top:12px;padding:12px;font-size:14px" id="go">
+                  <i class="fa-solid fa-right-to-bracket"></i> Sign in
+                </button>
+              </form>
+            ` : `
+              <form id="mf" novalidate>
+                <h2 style="margin:0 0 4px;font-size:18px;font-weight:800">Member Login</h2>
+                <p class="msg" style="margin:0 0 12px">Enter the 10-digit phone number you gave the gym</p>
+
+                <label>Phone number</label>
+                <input id="mp" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" autocomplete="tel" required>
+
+                <div class="msg err" id="mf-err">${esc(msg)}</div>
+                <button type="submit" style="width:100%;margin-top:14px;padding:12px;font-size:14px;background:#12a150" id="mg">
+                  <i class="fa-solid fa-id-badge"></i> View my card
+                </button>
+              </form>
+            `}
+          </div>
+        </div>
+      `;
+
+      if (loginMode === "staff") {
+        const sp = $("#sp");
+        if (sp) sp.onchange = e => { $("#p").type = e.target.checked ? "text" : "password"; };
+        setTimeout(() => { const f = $("#u"); if (f) f.focus(); }, 40);
+
+        $("#lf").onsubmit = async e => {
+          e.preventDefault();
+          const rawU = $("#u").value.trim().toLowerCase();
+          const rawP = $("#p").value;
+          if (!rawU || !rawP) return loginView("Enter Login ID and password");
+
+          const btn = $("#go");
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in & loading Google Drive data…';
+
+          creds = { user: rawU, pw: rawP };
+          try {
+            const r = await api({ action: "list" });
+            if (!r || r.error) {
+              creds = null;
+              return loginView("Incorrect ID or password");
+            }
+            role = r.role;
+            members = Object.values(r.members || {});
+            attm = r.att || {};
+            ls.s("rcg_cred", JSON.stringify(creds));
+            ls.s("rcg_role", role);
+
+            if (role === "owner") {
+              try {
+                const cr = await api({ action: "crmlist" });
+                if (cr && !cr.error && cr.crm) {
+                  C = unpackCrmFromServer(cr.crm);
+                }
+              } catch (e2) {}
+            }
+
+            // Populate Sales & Analytics automatically from loaded members' bills
+            autoSyncSalesFromMembers();
+            saveLocalState();
+            toast(`Loaded ${members.length} members from Google Drive ✔`, "ok");
+            render();
+          } catch (err) {
+            creds = null;
+            return loginView("Cannot reach server. Check internet or script permissions.");
+          }
+        };
+      } else {
+        setTimeout(() => { const f = $("#mp"); if (f) f.focus(); }, 40);
+        $("#mf").onsubmit = async e => {
+          e.preventDefault();
+          const p = $("#mp").value.replace(/\D/g, "").slice(-10);
+          if (p.length < 10) return loginView("Enter a valid 10-digit number");
+          const btn = $("#mg");
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking…';
+
+          try {
+            const r = await fetch(API, {
+              method: "POST",
+              body: JSON.stringify({ action: "member", phone: p })
+            }).then(x => x.json());
+            if (r && r.error) return loginView("Member login error: " + r.error);
+            if (!r || !r.members || !r.members.length) {
+              return loginView("Number not found. Please check with the gym.");
+            }
+            mphone = p;
+            mmem = r.members;
+            role = "member";
+            ls.s("rcg_member", p);
+            ls.s("rcg_mcache", JSON.stringify(mmem));
+            render();
+          } catch (err) {
+            return loginView("Cannot reach server. Check your internet.");
+          }
+        };
+      }
+    }
+
+    /* ============================================================================
+       16. MAIN APPLICATION SHELL & NAVIGATION RENDERER
+       ============================================================================ */
+    function toggleTheme() {
+      const htmlEl = document.documentElement;
+      const next = htmlEl.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      htmlEl.setAttribute("data-theme", next);
+      ls.s("rcg_theme", next);
+    }
+
+    function tick() {
+      const el = $("#clk"), dtEl = $("#cdt");
+      if (!el) return;
+      const n = new Date();
+      if (dtEl) dtEl.textContent = n.toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+      el.textContent = n.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+    }
+    setInterval(tick, 1000);
+
+    // Auto background sync every 30s when no modal is open
+    setInterval(() => {
+      if (!document.querySelector(".modal") && (creds || mphone) && API) {
+        syncFromCloud(false);
+      }
+    }, 30000);
+
+    const NAV_ITEMS = [
+      ["dash", "📈 Business Analysis & Charts", true],
+      ["breakdown", "📊 Day / Month / Year Data", true],
+      ["members", "🪪 Members & ID Card Column", false],
+      ["attendance", "✔ Member Attendance", false],
+      ["sales", "💰 Total Sales", true],
+      ["expenses", "🧾 Expense Data", true],
+      ["packages", "📦 Packages", false],
+      ["invoices", "📄 Invoices & Expiries", false],
+      ["staff_owner", "👔 Staff & Owner Columns", true]
+    ];
+
+    function render() {
+      if (!role) return mphone ? (role = "member", memberView()) : loginView();
+      if (role === "member") return memberView();
+
+      // If staff is logged in, default to 'members' or 'attendance' tab
+      const allowedTabs = NAV_ITEMS.filter(([k, l, ownerOnly]) => role === "owner" || !ownerOnly);
+      if (!allowedTabs.some(([k]) => k === mainTab)) {
+        mainTab = "members";
+      }
+
+      const hasFocus = document.activeElement && document.activeElement.id === "q";
+
+      let bodyContent = "";
+      if (mainTab === "dash") bodyContent = viewDashboard();
+      else if (mainTab === "breakdown") bodyContent = viewBreakdown();
+      else if (mainTab === "members") bodyContent = viewMembersAndIdCards(false);
+      else if (mainTab === "attendance") bodyContent = viewAttendanceHub();
+      else if (mainTab === "sales") bodyContent = viewSales();
+      else if (mainTab === "expenses") bodyContent = viewExpenses();
+      else if (mainTab === "packages") bodyContent = viewPackages();
+      else if (mainTab === "invoices") bodyContent = viewInvoicesAndExpiries();
+      else if (mainTab === "staff_owner") bodyContent = viewStaffAndOwner();
+      else bodyContent = viewMembersAndIdCards(false);
+
+      app.innerHTML = `
+        <header class="app-header">
+          ${brandLogoHTML(36)}
+
+          <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:wrap">
+            <span class="chip" style="border-color:${role === 'owner' ? 'var(--red)' : 'var(--blue)'}">
+              <i class="fa-solid ${role === 'owner' ? 'fa-crown' : 'fa-user-tie'}" style="color:${role === 'owner' ? 'var(--red)' : 'var(--blue)'}"></i>
+              ${role === "owner" ? "Owner (Full Access)" : "Staff Portal"}
+            </span>
+
+            ${role === "staff" && C.staff && C.staff.length ? `
+              <select style="width:auto;padding:5px 8px;font-size:12px" onchange="activeStaffName=this.value;toast('Active Staff: '+this.value,'info')">
+                ${(C.staff || []).map(s => `<option ${activeStaffName.startsWith(s.name) ? "selected" : ""}>${esc(s.name)} (${esc(s.role)})</option>`).join("")}
+              </select>
+            ` : ""}
+
+            ${role === "owner" ? `<button class="sm" onclick="saleInvoice()"><i class="fa-solid fa-plus"></i> + Sale / Invoice</button>` : ""}
+            <button class="g sm" onclick="addView()"><i class="fa-solid fa-user-plus"></i> + Add Member</button>
+            <button class="g sm" onclick="syncFromCloud(true)" title="Sync live data with Google Drive"><i class="fa-solid fa-arrows-rotate"></i> Sync</button>
+            ${role === "owner" ? `
+              <button class="g sm" onclick="exportBackupJson()" title="Download Full Backup JSON"><i class="fa-solid fa-download"></i> Backup</button>
+              <button class="g sm" onclick="importBackupJsonModal()" title="Restore / Import Members JSON"><i class="fa-solid fa-upload"></i> Restore</button>
+            ` : ""}
+            <button class="g sm" onclick="toggleTheme()" title="Switch Dark / Light Theme"><i class="fa-solid fa-circle-half-stroke"></i></button>
+            <button class="g sm" id="btn-logout" title="Log out"><i class="fa-solid fa-right-from-bracket"></i> Log out</button>
+          </div>
+        </header>
+
+        <!-- Sticky Navigation Tabs -->
+        <nav class="nav-tabs">
+          ${allowedTabs.map(([k, label]) => `
+            <button class="${mainTab === k ? "" : "g"}" data-nav="${k}">${label}</button>
+          `).join("")}
+        </nav>
+
+        <main class="w">
+          ${bodyContent}
+        </main>
+      `;
+
+      // Bind Logout
+      $("#btn-logout").onclick = () => {
+        askConfirm("Log Out", "Are you sure you want to log out?", () => {
+          ls.s("rcg_role", "");
+          ls.s("rcg_cred", "");
+          creds = null;
+          role = null;
+          render();
+        }, "Log out");
+      };
+
+      // Bind Navigation
+      $$("[data-nav]").forEach(b => {
+        b.onclick = () => {
+          mainTab = b.dataset.nav;
+          render();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        };
+      });
+
+      // Bind Period Filter buttons
+      $$("[data-r]").forEach(b => {
+        b.onclick = () => {
+          const c = rng();
+          R.k = b.dataset.r;
+          if (R.k === "custom" && !R.from) { R.from = c[0]; R.to = c[1]; }
+          render();
+        };
+      });
+      $$("[data-rd]").forEach(i => {
+        i.onchange = () => { R[i.dataset.rd] = i.value; render(); };
+      });
+
+      // Bind Member Filter & Cards
+      $$("[data-f]").forEach(el => {
+        el.onclick = () => { flt = el.dataset.f; render(); };
+      });
+      $$(".id[data-id]").forEach(el => {
+        el.onclick = () => detail(el.dataset.id);
+      });
+
+      // Bind Search Input
+      const qi = $("#q");
+      if (qi) {
+        qi.oninput = e => { q = e.target.value; render(); };
+        if (hasFocus) {
+          qi.focus();
+          qi.setSelectionRange(q.length, q.length);
+        }
+      }
+
+      // Bind Table Quick Search
+      $$("[data-fs]").forEach(inp => {
+        inp.oninput = () => {
+          const term = inp.value.toLowerCase();
+          $$("tr[data-s]").forEach(row => {
+            row.style.display = row.dataset.s.includes(term) ? "" : "none";
+          });
+        };
+      });
+
+      tick();
+    }
+
+    function exportBackupJson() {
+      const payload = { exportedAt: new Date().toISOString(), members, attendance: attm, crm: C };
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
+      a.download = "red-cross-gym-backup-" + todayS() + ".json";
+      a.click();
+      toast("Full gym backup JSON downloaded ✔", "ok");
+    }
+
+    function importBackupJsonModal() {
+      const d = modal(`
+        <h3 style="margin:0 0 6px;font-size:18px;font-weight:800">📂 Restore / Import Gym Backup (.json)</h3>
+        <p class="msg" style="margin:0 0 12px">Select a Red Cross Gym backup <code>.json</code> file (either a member list array or full CRM backup) to upload into your Google Drive database.</p>
+        <input type="file" id="imp-json" accept="application/json,.json">
+        <div class="msg" id="imp-st"></div>
+        <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+          <button class="g" id="imp-cl">Close</button>
+        </div>
+      `, "460px");
+      d.querySelector("#imp-cl").onclick = () => d.remove();
+      d.querySelector("#imp-json").onchange = async e => {
+        const f = e.target.files[0];
+        if (!f) return;
+        const st = d.querySelector("#imp-st");
+        st.textContent = "Reading backup file and syncing to Google Drive…";
+        try {
+          const parsed = JSON.parse(await f.text());
+          const memList = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.members) ? parsed.members : Object.values(parsed.members || {}));
+          for (const m of memList) {
+            if (m && m.id) await store.set(m);
+          }
+          if (parsed.crm) {
+            for (const col of ["sales", "expenses", "packages", "staff"]) {
+              if (Array.isArray(parsed.crm[col]) && parsed.crm[col].length) {
+                await cputs(col, parsed.crm[col]);
+              }
+            }
+          }
+          toast(`Imported ${memList.length} members into Google Drive ✔`, "ok");
+          d.remove();
+          await syncFromCloud(false);
+        } catch (err) {
+          st.innerHTML = '<span class="err">Invalid JSON file or upload error.</span>';
+        }
+      };
+    }
+
+    /* ============================================================================
+       17. INITIALIZATION ON WINDOW LOAD
+       ============================================================================ */
+    window.onload = async function () {
+      const savedTheme = ls.g("rcg_theme");
+      if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
+      loadLocalState();
+
+      try { creds = JSON.parse(ls.g("rcg_cred") || "null"); } catch (e) { creds = null; }
+      role = creds && creds.user && API ? ls.g("rcg_role") : null;
+
+      if (!role) {
+        mphone = ls.g("rcg_member") || null;
+        if (mphone) {
+          role = "member";
+          try { mmem = JSON.parse(ls.g("rcg_mcache") || "[]"); } catch (e) { mmem = []; }
+        }
+      }
+
+      render();
+      if (role) {
+        await syncFromCloud(false);
+      }
+    };
+
+  </script>
+</body>
+</html>
